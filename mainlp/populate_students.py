@@ -1,0 +1,97 @@
+# populate_students.py
+import os
+import django
+import random
+from datetime import date, timedelta
+
+# Налаштування Django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'campus_registry.settings')
+django.setup()
+
+from students.models import Student
+
+def create_sample_students():
+    first_names = ["Іван", "Олена", "Петро", "Марія", "Олексій", "Анна", "Андрій", "Наталія", "Сергій", "Юлія", "Дмитро", "Тетяна", "Михайло", "Катерина"]
+    last_names = ["Шевченко", "Коваленко", "Бондаренко", "Ткаченко", "Кравченко", "Олійник", "Шевчук", "Сергієнко", "Савченко", "Бондар", "Лисенко", "Мельник"]
+    middle_names = ["Олександрович", "Іванович", "Петрович", "Михайлович", "Васильович", "Олегівна", "Ігорівна", "Андріївна", "Сергіївна", "Володимирівна"]
+
+    streets = ["Шевченка", "Франка", "Грушевського", "Лісова", "Центральна", "Соборна", "Незалежності"]
+    cities = ["Київ", "Львів", "Одеса", "Харків", "Дніпро", "Запоріжжя", "Вінниця", "Житомир", "Чернігів", "Полтава"]
+
+    institutes = [choice[0] for choice in Student.INSTITUTE_CHOICES]
+    regions = [choice[0] for choice in Student.UKRAINIAN_REGIONS]
+
+    for i in range(20):  # 🔹 створюємо 20 студентів
+        first_name = random.choice(first_names)
+        last_name = random.choice(last_names)
+        middle_name = random.choice(middle_names)
+        full_name = f"{last_name} {first_name} {middle_name}"
+
+        # Вік від 18 до 25
+        birth_year = random.randint(1998, 2005)
+        birth_month = random.randint(1, 12)
+        birth_day = random.randint(1, 28)
+        date_of_birth = date(birth_year, birth_month, birth_day)
+
+        phone = f"+380{random.randint(50, 99)}{random.randint(100, 999)}{random.randint(1000, 9999)}"
+        institute = random.choice(institutes)
+        course = random.randint(1, 6)
+
+        enrollment_year = date(birth_year + 18, 9, 1)
+        graduation_year = date(enrollment_year.year + course, 6, 30)
+
+        region = random.choice(regions)
+        city = random.choice(cities)
+        address = f"вул. {random.choice(streets)} {random.randint(1, 200)}"
+
+        dormitory = random.randint(1, 23)
+        room_number = str(random.randint(100, 500))
+
+        passport_data = f"AB{random.randint(100000, 999999)}"
+        passport_issue_date = date(random.randint(2016, 2023), random.randint(1, 12), random.randint(1, 28))
+        passport_issued_by = "Державна міграційна служба України"
+
+        contract_date = date(2022, random.randint(1, 12), random.randint(1, 28))
+        contract_number = f"Д-{random.randint(100, 999)}"
+        contract_termination_date = date(2024, random.randint(1, 12), random.randint(1, 28))
+
+        registration_consent = random.choice([True, False])
+        registration_date = date(2022, random.randint(1, 12), random.randint(1, 28))
+        registration_dormitory = random.randint(1, 23)
+        deregistration_date = date(2023, random.randint(1, 12), random.randint(1, 28))
+
+        notes = random.choice(["Зразковий студент", "Потребує консультацій", "Активний у громадському житті", None])
+
+        student = Student(
+            full_name=full_name,
+            date_of_birth=date_of_birth,
+            phone=phone,
+            institute=institute,
+            course=course,
+            enrollment_year=enrollment_year,
+            graduation_year=graduation_year,
+            passport_data=passport_data,
+            passport_issue_date=passport_issue_date,
+            passport_issued_by=passport_issued_by,
+            country="Україна",
+            region=region,
+            city=city,
+            address=address,
+            dormitory_number=dormitory,
+            room_number=room_number,
+            contract_date=contract_date,
+            contract_number=contract_number,
+            contract_termination_date=contract_termination_date,
+            registration_consent=registration_consent,
+            registration_date=registration_date,
+            registration_dormitory=registration_dormitory,
+            deregistration_date=deregistration_date,
+            notes=notes
+        )
+
+        student.save()
+        print(f"✅ Створено студента: {full_name}")
+
+if __name__ == "__main__":
+    create_sample_students()
+    print("🎉 Наповнення бази даних завершено!")
