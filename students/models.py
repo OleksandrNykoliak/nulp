@@ -94,7 +94,7 @@ class Student(models.Model):
     city = models.CharField(max_length=50, blank=True, null=True, verbose_name="Місто")
     address = models.CharField(max_length=200, blank=True, null=True, verbose_name="Адреса проживання")
     dormitory_number = models.IntegerField(choices=DORMITORY_NUMBERS, blank=True, null=True, verbose_name="Номер гуртожитку")
-    dormitory_address = models.CharField(max_length=200, blank=True, null=True, verbose_name="Адреса гуртожитку")  # 🔹 нове поле
+    # dormitory_address = models.CharField(max_length=200, blank=True, null=True, verbose_name="Адреса гуртожитку")  # 🔹 нове поле
     room_number = models.CharField(max_length=10, blank=True, null=True, verbose_name="Номер кімнати")
     contract_date = models.DateField(blank=True, null=True, verbose_name="Дата договору")
     contract_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="Номер договору")
@@ -106,8 +106,11 @@ class Student(models.Model):
     notes = models.TextField(blank=True, null=True, verbose_name="Примітки")
     contract_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="Номер договору")
 
-    def __str__(self):
-        return self.full_name
+    @property
+    def dormitory_address(self):
+        return self.DORMITORY_ADDRESSES.get(self.dormitory_number, "___")
+        def __str__(self):
+            return self.full_name
     
     def save(self, *args, **kwargs):
         if not self.contract_number and self.dormitory_number:
