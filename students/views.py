@@ -145,6 +145,7 @@ def student_contract_pdf(request, pk):
         "contract_date": student.contract_date.strftime("%d.%m.%Y") if student.contract_date else "___",
         "termination_date": student.contract_termination_date.strftime("%d.%m.%Y") if student.contract_termination_date else "___",
         "address": student.address or "____________________",
+        "city": student.city or "____________________",
         "phone": student.phone or "____________________",
         "passport_issued_by": student.passport_issued_by or "____________________",
         "passport_issue_date": student.passport_issue_date.strftime("%d.%m.%Y") if student.passport_issue_date else "___",
