@@ -1,4 +1,3 @@
-# populate_students.py
 import os
 import django
 import random
@@ -9,6 +8,9 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'campus_registry.settings')
 django.setup()
 
 from students.models import Student
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
 
 def create_sample_students():
     first_names = ["Іван", "Олена", "Петро", "Марія", "Олексій", "Анна", "Андрій", "Наталія", "Сергій", "Юлія", "Дмитро", "Тетяна", "Михайло", "Катерина"]
@@ -92,6 +94,32 @@ def create_sample_students():
         student.save()
         print(f"✅ Створено студента: {full_name}")
 
+
+def create_custom_superusers():
+    users_with_passwords = {
+        "Polishchuk": "PolishchukW5",
+        "Andriiovskyj": "AndriiovskyjR2",
+        "Dovha": "DovhaX9",
+        "Stefinko": "StefinkoQ7",
+        "Nedbaliuk": "NedbaliukT3",
+        "Ivaneiko": "IvaneikoL4",
+        "Kos": "KosZ8",
+        "Verbyana": "VerbyanaM7",
+        "Nykoliak": "NykoliakJ6",
+    }
+
+
+    for username, password in users_with_passwords.items():
+        email = f"{username.lower()}@example.com"
+        if not User.objects.filter(username=username).exists():
+            User.objects.create_superuser(username=username, email=email, password=password)
+            print(f"👑 Створено суперюзера: {username} / {password}")
+        else:
+            print(f"⚠️ Суперюзер {username} вже існує")
+
+
 if __name__ == "__main__":
     create_sample_students()
+    create_custom_superusers()
     print("🎉 Наповнення бази даних завершено!")
+    
