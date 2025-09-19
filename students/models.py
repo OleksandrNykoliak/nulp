@@ -108,6 +108,7 @@ class Student(models.Model):
     enrollment_year = models.DateField(blank=True, null=True, verbose_name="Рік вступу")
     graduation_year = models.DateField(blank=True, null=True, verbose_name="Рік закінчення навчання")
     passport_data = models.CharField(max_length=50, blank=True, null=True, verbose_name="Серія та номер паспорта/ID")
+    passport_record_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="запис №")
     passport_issue_date = models.DateField(blank=True, null=True, verbose_name="Дата видачі паспорта/ID")
     passport_issued_by = models.CharField(max_length=200, blank=True, null=True, verbose_name="Ким виданий паспорт/ID")
     country = models.CharField(max_length=50, default="Україна", blank=True, null=True, verbose_name="Країна")
@@ -127,14 +128,13 @@ class Student(models.Model):
     home_add_building = models.CharField(max_length=20, blank=True, null=True, verbose_name="Будинок")
     home_add_apartment = models.CharField(max_length=20, blank=True, null=True, verbose_name="Квартира")
     contract_date = models.DateField(blank=True, null=True, verbose_name="Дата договору")
-    contract_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="Номер договору")
+    contract_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="Номер договору(не заповнюємо)")
     contract_termination_date = models.DateField(blank=True, null=True, verbose_name="Дата розірвання договору")
     registration_consent = models.BooleanField(default=False, verbose_name="Згода на реєстрацію")
     registration_date = models.DateField(blank=True, null=True, verbose_name="Дата реєстрації прописки")
     registration_dormitory = models.IntegerField(choices=DORMITORY_NUMBERS, blank=True, null=True, verbose_name="Номер гуртожитку реєстрації")
     deregistration_date = models.DateField(blank=True, null=True, verbose_name="Дата зняття з реєстрації")
     notes = models.TextField(blank=True, null=True, verbose_name="Примітки")
-    contract_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="Номер договору")
 
     @property
     def dormitory_address(self):

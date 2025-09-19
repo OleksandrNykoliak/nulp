@@ -71,15 +71,23 @@ def student_update(request, pk):
         form = StudentForm(instance=student)
     
     return render(request, 'students/student_form.html', {'form': form})
+# @login_required
+# def student_delete(request, pk):
+#     student = get_object_or_404(Student, pk=pk)
+#     if request.method == 'POST':
+#         student.delete()
+#         return redirect('student_list')
+    
+#     return render(request, 'students/student_confirm_delete.html', {'student': student})
+
+from django.contrib import messages
+
 @login_required
 def student_delete(request, pk):
     student = get_object_or_404(Student, pk=pk)
-    if request.method == 'POST':
-        student.delete()
-        return redirect('student_list')
-    
-    return render(request, 'students/student_confirm_delete.html', {'student': student})
-
+    # Замість видалення
+    messages.error(request, "❌ Видалення заборонено. Будь ласка, створіть нового користувача.")
+    return redirect('student_list')
 
 
 

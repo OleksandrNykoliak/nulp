@@ -21,6 +21,7 @@ class StudentForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['contract_number'].disabled = True
         # date_fields вручну кажемо які формати приймати
         date_fields = [
             'date_of_birth', 'enrollment_year', 'graduation_year',

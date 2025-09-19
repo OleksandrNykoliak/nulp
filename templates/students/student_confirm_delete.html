@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+<!-- {% extends 'base.html' %}
 
 {% block title %}Видалення студента{% endblock %}
 
@@ -19,6 +19,32 @@
                         <button type="submit" class="btn btn-danger">Видалити</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} -->
+
+
+
+{% extends 'base.html' %}
+
+{% block title %}Видалення заборонено{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">Операція заборонена</h4>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">Студента <strong>{{ student.full_name }}</strong> <span class="text-danger">не можна видаляти</span>.</p>
+                <p>Будь ласка, створіть нового користувача замість видалення.</p>
+
+                <a href="{% url 'student_list' %}" class="btn btn-primary">
+                    <i class="bi bi-arrow-left me-1"></i> Повернутись до списку
+                </a>
             </div>
         </div>
     </div>
