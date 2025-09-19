@@ -22,6 +22,9 @@ def create_sample_students():
 
     institutes = [choice[0] for choice in Student.INSTITUTE_CHOICES]
     regions = [choice[0] for choice in Student.UKRAINIAN_REGIONS]
+    person_types = [choice[0] for choice in Student.PERSON_TYPE_CHOICES]
+    genders = [choice[0] for choice in Student.GENDER_CHOICES]
+    categories = [choice[0] for choice in Student.CITY_TYPE_CHOICES]
 
     for i in range(20):  # 🔹 створюємо 20 студентів
         first_name = random.choice(first_names)
@@ -64,7 +67,17 @@ def create_sample_students():
 
         notes = random.choice(["Зразковий студент", "Потребує консультацій", "Активний у громадському житті", None])
 
+        # 🔹 Домашня адреса
+        home_region = random.choice(regions)
+        home_city = random.choice(cities)
+        home_street = random.choice(streets)
+        home_building = str(random.randint(1, 200))
+        home_apartment = str(random.randint(1, 120))
+
         student = Student(
+            type=random.choice(person_types),
+            gender=random.choice(genders),
+            category=random.choice(categories),
             full_name=full_name,
             date_of_birth=date_of_birth,
             phone=phone,
@@ -88,11 +101,21 @@ def create_sample_students():
             registration_date=registration_date,
             registration_dormitory=registration_dormitory,
             deregistration_date=deregistration_date,
-            notes=notes
+            notes=notes,
+
+            # 👇 нові поля для домашньої адреси
+            home_add_country="Україна",
+            home_add_region=home_region,
+            home_add_rajon=f"Район {random.randint(1, 20)}",
+            home_add_category=random.choice(categories),
+            home_add_city=home_city,
+            home_add_street=f"вул. {home_street}",
+            home_add_building=home_building,
+            home_add_apartment=home_apartment,
         )
 
         student.save()
-        print(f"✅ Створено студента: {full_name}")
+        print(f"✅ Створено {student.get_type_display()} ({student.get_gender_display()}): {full_name}")
 
 
 def create_custom_superusers():
@@ -108,7 +131,6 @@ def create_custom_superusers():
         "Nykoliak": "NykoliakJ6",
     }
 
-
     for username, password in users_with_passwords.items():
         email = f"{username.lower()}@example.com"
         if not User.objects.filter(username=username).exists():
@@ -122,4 +144,3 @@ if __name__ == "__main__":
     create_sample_students()
     create_custom_superusers()
     print("🎉 Наповнення бази даних завершено!")
-    

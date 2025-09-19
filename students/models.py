@@ -75,8 +75,31 @@ class Student(models.Model):
         22: "м. Львів, вул. Володимира Великого, 57",
         23: "м. Львів, вул. Під Голоском, 23",
     }
-        
+    
+    CITY_TYPE_CHOICES = [
+            ('city', 'Місто'),
+            ('urban_settlement', 'Селище міського типу'),
+            ('village', 'Село'),
+            ('settlement', 'Селище'),
+        ]
+    
+    PERSON_TYPE_CHOICES = [
+            ('student', 'Студент'),
+            ('postgraduate', 'Аспірант'),
+            ('doctoral', 'Докторант'),
+            ('external', 'Сторонній'),
+            ('staff', 'Співробітник'),
+            ('child', 'Дитина'),
+        ]
+    
+    GENDER_CHOICES = [
+        ('m', 'ч'),
+        ('f', 'ж'),
+    ]
+    
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата створення")
+    type = models.CharField(max_length=50, choices=PERSON_TYPE_CHOICES, blank=True, null=True, verbose_name="Тип")
+    gender = models.CharField(max_length=50, choices=GENDER_CHOICES, blank=True, null=True, verbose_name="Стать")
     full_name = models.CharField(max_length=200, verbose_name="ПІБ студента")
     date_of_birth = models.DateField(blank=True, null=True, verbose_name="Дата народження")
     phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Телефон")
@@ -89,11 +112,20 @@ class Student(models.Model):
     passport_issued_by = models.CharField(max_length=200, blank=True, null=True, verbose_name="Ким виданий паспорт/ID")
     country = models.CharField(max_length=50, default="Україна", blank=True, null=True, verbose_name="Країна")
     region = models.CharField(max_length=50, choices=UKRAINIAN_REGIONS, blank=True, null=True, verbose_name="Область")
+    region_rajon = models.CharField(max_length=200, blank=True, null=True, verbose_name="Район")
+    category = models.CharField(max_length=50, choices=CITY_TYPE_CHOICES, blank=True, null=True, verbose_name="Категорія")
     city = models.CharField(max_length=50, blank=True, null=True, verbose_name="Місто")
-    address = models.CharField(max_length=200, blank=True, null=True, verbose_name="Адреса проживання")
+    address = models.CharField(max_length=200, blank=True, null=True, verbose_name="Вулиця")
     dormitory_number = models.IntegerField(choices=DORMITORY_NUMBERS, blank=True, null=True, verbose_name="Номер гуртожитку")
-    # dormitory_address = models.CharField(max_length=200, blank=True, null=True, verbose_name="Адреса гуртожитку")  # 🔹 нове поле
     room_number = models.CharField(max_length=10, blank=True, null=True, verbose_name="Номер кімнати")
+    home_add_country = models.CharField(max_length=50, default="Україна", blank=True, null=True, verbose_name="Країна")
+    home_add_region = models.CharField(max_length=50, choices=UKRAINIAN_REGIONS, blank=True, null=True, verbose_name="Область")
+    home_add_rajon = models.CharField(max_length=200, blank=True, null=True, verbose_name="Район")
+    home_add_category = models.CharField(max_length=50, choices=CITY_TYPE_CHOICES, blank=True, null=True, verbose_name="Категорія")
+    home_add_city = models.CharField(max_length=50, blank=True, null=True, verbose_name="Місто")
+    home_add_street = models.CharField(max_length=100, blank=True, null=True, verbose_name="Вулиця")
+    home_add_building = models.CharField(max_length=20, blank=True, null=True, verbose_name="Будинок")
+    home_add_apartment = models.CharField(max_length=20, blank=True, null=True, verbose_name="Квартира")
     contract_date = models.DateField(blank=True, null=True, verbose_name="Дата договору")
     contract_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="Номер договору")
     contract_termination_date = models.DateField(blank=True, null=True, verbose_name="Дата розірвання договору")

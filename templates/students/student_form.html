@@ -98,13 +98,22 @@
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <div class="form-section">
-                                <h5 class="section-header"><i class="bi bi-person-circle me-2"></i>Основна інформація</h5>
+                                <h5 class="section-header"><i class="bi bi-person-circle me-2"></i>Студент</h5>
                                 <div class="mb-3">
                                     <label for="{{ form.full_name.id_for_label }}" class="form-label required-field">{{ form.full_name.label }}</label>
                                     {{ form.full_name }}
                                     {% if form.full_name.errors %}
                                         <div class="text-danger mt-1 small">{{ form.full_name.errors }}</div>
                                     {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.gender.id_for_label }}" class="form-label">{{ form.gender.label }}</label>
+                                    {{ form.gender }}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.type.id_for_label }}" class="form-label">{{ form.type.label }}</label>
+                                    {{ form.type }}
                                 </div>
                                 <div class="mb-3">
                                     <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">{{ form.date_of_birth.label }}</label>
@@ -119,7 +128,7 @@
                         
                         <div class="col-md-6">
                             <div class="form-section">
-                                <h5 class="section-header"><i class="bi bi-book me-2"></i>Навчальна інформація</h5>
+                                <h5 class="section-header"><i class="bi bi-book me-2"></i>Інститут</h5>
                                 <div class="mb-3">
                                     <label for="{{ form.institute.id_for_label }}" class="form-label">{{ form.institute.label }}</label>
                                     {{ form.institute }}
@@ -161,27 +170,88 @@
                         
                         <div class="col-md-6">
                             <div class="form-section">
-                                <h5 class="section-header"><i class="bi bi-house me-2"></i>Адреса</h5>
-                                <div class="mb-3">
-                                    <label for="{{ form.country.id_for_label }}" class="form-label">{{ form.country.label }}</label>
-                                    {{ form.country }}
-                                </div>
-                                <div class="mb-3">
-                                    <label for="{{ form.region.id_for_label }}" class="form-label">{{ form.region.label }}</label>
-                                    {{ form.region }}
-                                </div>
-                                <div class="mb-3">
-                                    <label for="{{ form.city.id_for_label }}" class="form-label">{{ form.city.label }}</label>
-                                    {{ form.city }}
-                                </div>
-                                <div class="mb-3">
-                                    <label for="{{ form.address.id_for_label }}" class="form-label">{{ form.address.label }}</label>
-                                    {{ form.address }}
-                                </div>
+                                <h5 class="section-header"><i class="bi bi-house me-2"></i>Місце народження</h5>
+                            <div class="mb-3">
+                                <label for="{{ form.country.id_for_label }}" class="form-label">{{ form.country.label }}</label>
+                                {{ form.country }}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.region.id_for_label }}" class="form-label">{{ form.region.label }}</label>
+                                {{ form.region }}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.region_rajon.id_for_label }}" class="form-label">{{ form.region_rajon.label }}</label>
+                                {{ form.region_rajon }}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.category.id_for_label }}" class="form-label">{{ form.category.label }}</label>
+                                {{ form.category }}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.city.id_for_label }}" class="form-label">{{ form.city.label }}</label>
+                                {{ form.city }}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.address.id_for_label }}" class="form-label">{{ form.address.label }}</label>
+                                {{ form.address }}
+                            </div>
                             </div>
                         </div>
                     </div>
                     
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="form-section">
+                                <h5 class="section-header"><i class="bi bi-house-door me-2"></i>Домашня адреса</h5>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.home_add_country.id_for_label }}" class="form-label">{{ form.home_add_country.label }}</label>
+                                            {{ form.home_add_country }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="{{ form.home_add_region.id_for_label }}" class="form-label">{{ form.home_add_region.label }}</label>
+                                            {{ form.home_add_region }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="{{ form.home_add_rajon.id_for_label }}" class="form-label">{{ form.home_add_rajon.label }}</label>
+                                            {{ form.home_add_rajon }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="{{ form.home_add_category.id_for_label }}" class="form-label">{{ form.home_add_category.label }}</label>
+                                            {{ form.home_add_category }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.home_add_city.id_for_label }}" class="form-label">{{ form.home_add_city.label }}</label>
+                                            {{ form.home_add_city }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="{{ form.home_add_street.id_for_label }}" class="form-label">{{ form.home_add_street.label }}</label>
+                                            {{ form.home_add_street }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="{{ form.home_add_building.id_for_label }}" class="form-label">{{ form.home_add_building.label }}</label>
+                                            {{ form.home_add_building }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="{{ form.home_add_apartment.id_for_label }}" class="form-label">{{ form.home_add_apartment.label }}</label>
+                                            {{ form.home_add_apartment }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+
+
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <div class="form-section">
@@ -211,7 +281,7 @@
                         
                         <div class="col-md-6">
                             <div class="form-section">
-                                <h5 class="section-header"><i class="bi bi-clipboard-check me-2"></i>Реєстрація</h5>
+                                <h5 class="section-header"><i class="bi bi-clipboard-check me-2"></i>Реєстрація в студмістечку</h5>
                                 <div class="mb-3 form-check form-switch">
                                     {{ form.registration_consent }}
                                     <label for="{{ form.registration_consent.id_for_label }}" class="form-check-label">{{ form.registration_consent.label }}</label>
@@ -233,7 +303,7 @@
                     </div>
                     
                     <div class="form-section mb-4">
-                        <h5 class="section-header"><i class="bi bi-chat-text me-2"></i>Додаткова інформація</h5>
+                        <h5 class="section-header"><i class="bi bi-chat-text me-2"></i>Примітка</h5>
                         <div class="mb-3">
                             <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
                             {{ form.notes }}
