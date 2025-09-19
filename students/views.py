@@ -135,15 +135,34 @@ def student_contract_pdf(request, pk):
     student = get_object_or_404(Student, pk=pk)
 
     # Шлях до шаблону
-    template_path = os.path.join(os.path.dirname(__file__), "contracts/contract_template.docx")
+    template_path = os.path.join(os.path.dirname(__file__), "contracts/contract.docx")
 
     # Завантажуємо шаблон Word
     doc = DocxTemplate(template_path)
 
     # Контекст для підстановки
+    # context = {
+    #     "full_name": student.full_name or "____________________",
+    #     "passport_data": student.passport_data or "____________________",
+    #     "institute": student.institute or "___",
+    #     "course": student.course or "___",
+    #     "dormitory_number": student.dormitory_number or "___",
+    #     "dormitory_address": student.dormitory_address or "___",
+    #     "room_number": student.room_number or "___",
+    #     "contract_number": student.contract_number or "___",
+    #     "contract_date": student.contract_date.strftime("%d.%m.%Y") if student.contract_date else "___",
+    #     "termination_date": student.contract_termination_date.strftime("%d.%m.%Y") if student.contract_termination_date else "___",
+    #     "address": student.address or "____________________",
+    #     "city": student.city or "____________________",
+    #     "phone": student.phone or "____________________",
+    #     "passport_issued_by": student.passport_issued_by or "____________________",
+    #     "passport_issue_date": student.passport_issue_date.strftime("%d.%m.%Y") if student.passport_issue_date else "___",
+    # }
+    
     context = {
         "full_name": student.full_name or "____________________",
         "passport_data": student.passport_data or "____________________",
+        "passport_record_number": getattr(student, "passport_record_number", "__________") or "__________",
         "institute": student.institute or "___",
         "course": student.course or "___",
         "dormitory_number": student.dormitory_number or "___",
@@ -152,12 +171,28 @@ def student_contract_pdf(request, pk):
         "contract_number": student.contract_number or "___",
         "contract_date": student.contract_date.strftime("%d.%m.%Y") if student.contract_date else "___",
         "termination_date": student.contract_termination_date.strftime("%d.%m.%Y") if student.contract_termination_date else "___",
+
+        # фактична адреса
         "address": student.address or "____________________",
         "city": student.city or "____________________",
+        "category": student.get_category_display() if student.category else "___",
+
+        # телефон
         "phone": student.phone or "____________________",
+
+        # паспорт
         "passport_issued_by": student.passport_issued_by or "____________________",
-        "passport_issue_date": student.passport_issue_date.strftime("%d.%m.%Y") if student.passport_issue_date else "___",
+        "passport_issued_date": student.passport_issue_date.strftime("%d.%m.%Y") if student.passport_issue_date else "___",
+
+        # домашня адреса
+        "home_add_category": student.get_home_add_category_display() if student.home_add_category else "___",
+        "home_add_city": student.home_add_city or "___",
+        "home_add_street": student.home_add_street or "___",
+        "home_add_building": student.home_add_building or "___",
+        "home_add_apartment": student.home_add_apartment or "___",
     }
+
+
 
     # Рендеримо DOCX з даними
     doc.render(context)

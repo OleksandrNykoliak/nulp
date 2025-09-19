@@ -77,10 +77,10 @@ class Student(models.Model):
     }
     
     CITY_TYPE_CHOICES = [
-            ('city', 'Місто'),
-            ('urban_settlement', 'Селище міського типу'),
-            ('village', 'Село'),
-            ('settlement', 'Селище'),
+            ('city', 'місто'),
+            ('urban_settlement', 'селище міського типу'),
+            ('village', 'село'),
+            ('settlement', 'селище'),
         ]
     
     PERSON_TYPE_CHOICES = [
@@ -139,8 +139,9 @@ class Student(models.Model):
     @property
     def dormitory_address(self):
         return self.DORMITORY_ADDRESSES.get(self.dormitory_number, "___")
-        def __str__(self):
-            return self.full_name
+
+    def __str__(self):
+        return self.full_name
     
     def save(self, *args, **kwargs):
         if not self.contract_number and self.dormitory_number:
