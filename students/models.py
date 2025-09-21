@@ -77,10 +77,9 @@ class Student(models.Model):
     }
     
     CITY_TYPE_CHOICES = [
-            ('city', 'місто'),
-            ('urban_settlement', 'селище міського типу'),
-            ('village', 'село'),
-            ('settlement', 'селище'),
+            ('city', 'м.'),
+            ('settlement', 'с-ще'),
+            ('village', 'с.'),
         ]
     
     PERSON_TYPE_CHOICES = [
