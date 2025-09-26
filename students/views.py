@@ -12,11 +12,24 @@ from django.http import FileResponse
 from docxtpl import DocxTemplate
 import re
 
-# views.py
+from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .models import Student
+from .forms import StudentForm, StudentSearchForm
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+import os
+import tempfile
+import subprocess
+from django.http import FileResponse
+from docxtpl import DocxTemplate
+import re
+
 @login_required
 def student_list(request):
     form = StudentSearchForm(request.GET or None)
-    students = Student.objects.all()
+    students = Student.objects.all().order_by('full_name') 
     
     if form.is_valid():
         search = form.cleaned_data.get('search')
@@ -47,12 +60,29 @@ def student_list(request):
             except (ValueError, TypeError):
                 pass
     
+    paginator = Paginator(students, 50)
+    page = request.GET.get('page')
+    
+    try:
+        students_page = paginator.page(page)
+    except PageNotAnInteger:
+        students_page = paginator.page(1)
+    except EmptyPage:
+        students_page = paginator.page(paginator.num_pages)
+    
+    filter_params = request.GET.copy()
+    if 'page' in filter_params:
+        del filter_params['page']
+    filter_query_string = filter_params.urlencode()
+    
     context = {
-        'students': students,
+        'students': students_page,
         'form': form,
-        'filter_params': request.GET.urlencode()
+        'filter_params': filter_query_string
     }
     return render(request, 'students/student_list.html', context)
+
+
 @login_required
 def student_create(request):
     if request.method == 'POST':

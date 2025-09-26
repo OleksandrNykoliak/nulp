@@ -80,6 +80,7 @@ class Student(models.Model):
             ('city', 'м.'),
             ('settlement', 'с-ще'),
             ('village', 'с.'),
+            ('villagesmt', 'смт.'),
         ]
     
     PERSON_TYPE_CHOICES = [

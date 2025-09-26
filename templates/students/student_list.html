@@ -61,6 +61,9 @@
                     {% endfor %}
                 </select>
             </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Застосувати</button>
+            </div>
         </form>
     </div>
 </div>
@@ -68,6 +71,13 @@
 <div class="card">
     <div class="card-body">
         {% if students %}
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <strong>Знайдено записів:</strong> {{ students.paginator.count }}
+                <span class="text-muted ms-2">(Сторінка {{ students.number }} з {{ students.paginator.num_pages }})</span>
+            </div>
+        </div>
+        
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -109,6 +119,64 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Пагінація -->
+        {% if students.paginator.num_pages > 1 %}
+        <nav aria-label="Навігація по сторінкам">
+            <ul class="pagination justify-content-center">
+                {% if students.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if filter_params %}&{{ filter_params }}{% endif %}" aria-label="Перша">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ students.previous_page_number }}{% if filter_params %}&{{ filter_params }}{% endif %}" aria-label="Попередня">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;&laquo;</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;</span>
+                    </li>
+                {% endif %}
+
+                {% for num in students.paginator.page_range %}
+                    {% if students.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > students.number|add:'-3' and num < students.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if filter_params %}&{{ filter_params }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if students.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ students.next_page_number }}{% if filter_params %}&{{ filter_params }}{% endif %}" aria-label="Наступна">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ students.paginator.num_pages }}{% if filter_params %}&{{ filter_params }}{% endif %}" aria-label="Остання">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;&raquo;</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
         {% else %}
         <p class="text-center text-muted">Немає студентів, що відповідають критеріям пошуку.</p>
         {% endif %}
@@ -123,9 +191,36 @@ document.addEventListener('DOMContentLoaded', function() {
     // Автоматична відправка форми при зміні значень
     inputs.forEach(input => {
         input.addEventListener('change', function() {
-            form.submit();
+            // Додаємо затримку для пошуку по тексту
+            if (input.name === 'search') {
+                clearTimeout(this.delay);
+                this.delay = setTimeout(() => {
+                    // Скидаємо номер сторінки при зміні фільтрів
+                    const pageInput = document.querySelector('input[name="page"]');
+                    if (pageInput) pageInput.remove();
+                    form.submit();
+                }, 500);
+            } else {
+                // Скидаємо номер сторінки при зміні фільтрів
+                const pageInput = document.querySelector('input[name="page"]');
+                if (pageInput) pageInput.remove();
+                form.submit();
+            }
         });
     });
+
+    // Для текстового пошуку також обробляємо input подію
+    const searchInput = document.getElementById('search');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(this.delay);
+            this.delay = setTimeout(() => {
+                const pageInput = document.querySelector('input[name="page"]');
+                if (pageInput) pageInput.remove();
+                form.submit();
+            }, 500);
+        });
+    }
 });
 </script>
 {% endblock %}
