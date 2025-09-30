@@ -13,4 +13,5 @@ urlpatterns = [
     path('<int:pk>/contract/', views.student_contract_pdf, name='student_contract_pdf'), 
     path('login/', auth_views.LoginView.as_view(template_name='students/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('export/', views.student_export, name='student_export'),  # Додайте цей рядок
 ]
