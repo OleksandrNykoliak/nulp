@@ -1,7 +1,5 @@
 {% extends 'base.html' %}
-
 {% block title %}Список студентів{% endblock %}
-
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Список студентів</h1>
@@ -28,7 +26,7 @@
                     <option value="">---------</option>
                     {% for value, label in form.fields.institute.choices %}
                         {% if value %}
-                        <option value="{{ value }}" {% if request.GET.institute == value %}selected{% endif %}>
+                        <option value="{{ value }}" {% if request.GET.institute == value|stringformat:"s" %}selected{% endif %}>
                             {{ label }}
                         </option>
                         {% endif %}
@@ -41,7 +39,7 @@
                     <option value="">---------</option>
                     {% for value, label in form.fields.course.choices %}
                         {% if value %}
-                        <option value="{{ value }}" {% if request.GET.course == value %}selected{% endif %}>
+                        <option value="{{ value }}" {% if request.GET.course == value|stringformat:"s" %}selected{% endif %}>
                             {{ label }}
                         </option>
                         {% endif %}
@@ -54,7 +52,7 @@
                     <option value="">---------</option>
                     {% for value, label in form.fields.dormitory.choices %}
                         {% if value %}
-                        <option value="{{ value }}" {% if request.GET.dormitory == value %}selected{% endif %}>
+                        <option value="{{ value }}" {% if request.GET.dormitory == value|stringformat:"s" %}selected{% endif %}>
                             {{ label }}
                         </option>
                         {% endif %}

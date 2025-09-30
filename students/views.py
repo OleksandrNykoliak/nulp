@@ -11,20 +11,8 @@ import subprocess
 from django.http import FileResponse
 from docxtpl import DocxTemplate
 import re
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .models import Student
-from .forms import StudentForm, StudentSearchForm
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-import os
-import tempfile
-import subprocess
-from django.http import FileResponse
-from docxtpl import DocxTemplate
-import re
+
 
 @login_required
 def student_list(request):
@@ -70,6 +58,7 @@ def student_list(request):
     except EmptyPage:
         students_page = paginator.page(paginator.num_pages)
     
+    # Створюємо рядок параметрів для пагінації
     filter_params = request.GET.copy()
     if 'page' in filter_params:
         del filter_params['page']
@@ -81,7 +70,6 @@ def student_list(request):
         'filter_params': filter_query_string
     }
     return render(request, 'students/student_list.html', context)
-
 
 @login_required
 def student_create(request):
@@ -112,7 +100,6 @@ def student_update(request, pk):
 @login_required
 def student_delete(request, pk):
     student = get_object_or_404(Student, pk=pk)
-    # Замість видалення
     messages.error(request, "❌ Видалення заборонено. Будь ласка, створіть нового користувача.")
     return redirect('student_list')
 
