@@ -17,6 +17,8 @@ class StudentForm(forms.ModelForm):
             'contract_termination_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'registration_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'deregistration_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+            'notes': forms.Textarea(attrs={'rows': 3, 'cols': 40, 'class': 'form-control'}),
+
         }
     
     def __init__(self, *args, **kwargs):
