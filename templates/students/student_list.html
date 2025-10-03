@@ -1,32 +1,53 @@
 {% extends 'base.html' %}
 {% block title %}Список студентів{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Список студентів</h1>
+
+    </div>
+
+
+<div style="text-align: right; margin-right:20px;">
+    <a href="{% url 'student_export' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" 
+       class="btn btn-sm btn-success me-2">
+        <i class="fas fa-download"></i> Друкувати (Excel)
+    </a>
+    
     <a href="{% url 'student_create' %}" class="btn btn-primary">Додати студента</a>
 </div>
 
-<div class="card mb-4">
-    <div class="card-header bg-light d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Пошук та фільтрація</h5>
-            <div>
-        <!-- Кнопка експорту в Excel -->
-        <a href="{% url 'student_export' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" 
-           class="btn btn-sm btn-success me-2">
-            <i class="fas fa-download"></i> Друкувати (Excel)
-        </a>
-        
-        {% if request.GET %}
-            <a href="{% url 'student_list' %}" class="btn btn-sm btn-outline-secondary">Очистити фільтри</a>
-        {% endif %}
-    </div>
-</div>
-        {% if request.GET %}
-            <a href="{% url 'student_list' %}" class="btn btn-sm btn-outline-secondary">Очистити фільтри</a>
-        {% endif %}
-    </div>
     <div class="card-body">
         <form method="get" id="filter-form" class="row g-3">
+                  <div class="col-md-2">
+            <label for="from_date_of_birth" class="form-label">Дата народження (від)</label>
+            <input type="date" name="from_date_of_birth" id="from_date_of_birth" class="form-control" 
+                   value="{{ request.GET.from_date_of_birth }}">
+        </div>
+        <div class="col-md-2">
+            <label for="to_date_of_birth" class="form-label">Дата народження (до)</label>
+            <input type="date" name="to_date_of_birth" id="to_date_of_birth" class="form-control" 
+                   value="{{ request.GET.to_date_of_birth }}">
+        </div>
+
+        <div class="col-md-2">
+            <label for="from_enrollment_year" class="form-label">Дата вступу (від)</label>
+            <input type="date" name="from_enrollment_year" id="from_enrollment_year" class="form-control" 
+                   value="{{ request.GET.from_enrollment_year }}">
+        </div>
+        <div class="col-md-2">
+            <label for="to_enrollment_year" class="form-label">Дата вступу (до)</label>
+            <input type="date" name="to_enrollment_year" id="to_enrollment_year" class="form-control" 
+                   value="{{ request.GET.to_enrollment_year }}">
+        </div>
+
+        <div class="col-md-2">
+            <label for="from_registration_date" class="form-label">Дата реєстрації (від)</label>
+            <input type="date" name="from_registration_date" id="from_registration_date" class="form-control" 
+                   value="{{ request.GET.from_registration_date }}">
+        </div>
+        <div class="col-md-2">
+            <label for="to_registration_date" class="form-label">Дата реєстрації (до)</label>
+            <input type="date" name="to_registration_date" id="to_registration_date" class="form-control" 
+                   value="{{ request.GET.to_registration_date }}">
+        </div>
             <div class="col-md-3">
                 <label for="search" class="form-label">Пошук (ПІБ або телефон)</label>
                 <input type="text" name="search" id="search" class="form-control" 
@@ -71,12 +92,20 @@
                     {% endfor %}
                 </select>
             </div>
+
+            
             <div class="col-md-2 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100">Застосувати</button>
             </div>
+                {% if request.GET %}
+            <a href="{% url 'student_list' %}" class="btn btn-sm btn-outline-secondary">Очистити фільтри</a>
+        {% endif %}
         </form>
+        
     </div>
+    
 </div>
+
 
 <div class="card">
     <div class="card-body">

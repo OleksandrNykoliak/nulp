@@ -38,11 +38,11 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
         <a class="navbar-brand" href="{% url 'student_list' %}">
-            Реєстрація студентів | паспортний сервіс
+            Студентське містечко | паспортний сервіс
         </a>
         <div class="navbar-nav ms-auto">
             <a class="nav-link" href="{% url 'student_list' %}">Головна</a>
-            <a class="nav-link" href="{% url 'student_create' %}">Додати студента</a>
+            <!-- <a class="nav-link" href="{% url 'student_create' %}">Додати студента</a> -->
 
             {% if user.is_authenticated %}
                 <span class="navbar-text me-2">{{ user.username }}</span>
@@ -53,9 +53,6 @@
         </div>
     </div>
 </nav>
-
-
-
 
 
 

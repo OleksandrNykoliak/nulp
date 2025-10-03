@@ -39,7 +39,26 @@ class StudentForm(forms.ModelForm):
                 field.required = False
 
 
-# forms.py
+# # forms.py
+# class StudentSearchForm(forms.Form):
+#     search = forms.CharField(required=False, label="Пошук")
+#     institute = forms.ChoiceField(
+#         choices=[('', '---------')] + Student.INSTITUTE_CHOICES, 
+#         required=False, 
+#         label="ННІ"
+#     )
+#     course = forms.ChoiceField(
+#         choices=[('', '---------')] + Student.COURSE_CHOICES, 
+#         required=False, 
+#         label="Курс"
+#     )
+#     dormitory = forms.ChoiceField(
+#         choices=[('', '---------')] + Student.DORMITORY_NUMBERS, 
+#         required=False, 
+#         label="Гуртожиток"
+#     )
+    
+    
 class StudentSearchForm(forms.Form):
     search = forms.CharField(required=False, label="Пошук")
     institute = forms.ChoiceField(
@@ -56,4 +75,35 @@ class StudentSearchForm(forms.Form):
         choices=[('', '---------')] + Student.DORMITORY_NUMBERS, 
         required=False, 
         label="Гуртожиток"
+    )
+    # Додаємо фільтри за датами
+    from_date_of_birth = forms.DateField(
+        required=False, 
+        label="Дата народження (від)",
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
+    to_date_of_birth = forms.DateField(
+        required=False, 
+        label="Дата народження (до)",
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
+    from_enrollment_year = forms.DateField(
+        required=False, 
+        label="Дата вступу (від)",
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
+    to_enrollment_year = forms.DateField(
+        required=False, 
+        label="Дата вступу (до)",
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
+    from_registration_date = forms.DateField(
+        required=False, 
+        label="Дата реєстрації (від)",
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
+    to_registration_date = forms.DateField(
+        required=False, 
+        label="Дата реєстрації (до)",
+        widget=forms.DateInput(attrs={'type': 'date'})
     )
