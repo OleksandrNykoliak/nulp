@@ -119,6 +119,8 @@ class Student(models.Model):
     address = models.CharField(max_length=200, blank=True, null=True, verbose_name="Вулиця")
     dormitory_number = models.IntegerField(choices=DORMITORY_NUMBERS, blank=True, null=True, verbose_name="Номер гуртожитку")
     room_number = models.CharField(max_length=10, blank=True, null=True, verbose_name="Номер кімнати")
+    settlement_date = models.DateField(blank=True, null=True, verbose_name="Дата поселення")
+    eviction_date = models.DateField(blank=True, null=True, verbose_name="Дата виселення")
     home_add_country = models.CharField(max_length=50, default="Україна", blank=True, null=True, verbose_name="Країна")
     home_add_region = models.CharField(max_length=50, choices=UKRAINIAN_REGIONS, blank=True, null=True, verbose_name="Область")
     home_add_rajon = models.CharField(max_length=200, blank=True, null=True, verbose_name="Район")

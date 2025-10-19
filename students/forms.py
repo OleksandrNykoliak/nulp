@@ -17,6 +17,8 @@ class StudentForm(forms.ModelForm):
             'contract_termination_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'registration_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'deregistration_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+            'settlement_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+            'eviction_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'notes': forms.Textarea(attrs={'rows': 3, 'cols': 40, 'class': 'form-control'}),
 
         }
@@ -28,7 +30,8 @@ class StudentForm(forms.ModelForm):
         date_fields = [
             'date_of_birth', 'enrollment_year', 'graduation_year',
             'passport_issue_date', 'contract_date', 'contract_termination_date',
-            'registration_date', 'deregistration_date'
+            'registration_date', 'deregistration_date',
+            'settlement_date', 'eviction_date',
         ]
         for f in date_fields:
             self.fields[f].input_formats = ['%Y-%m-%d']
