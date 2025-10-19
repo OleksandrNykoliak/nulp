@@ -122,9 +122,35 @@ def student_update(request, pk):
             return redirect('student_update', pk=student.pk)
     else:
         form = StudentForm(instance=student)
-    
-    return render(request, 'students/student_form.html', {'form': form})
+        
+    history = student.history.all().order_by('-history_date')
 
+    diffs = []
+    history_list = list(history)
+    for i in range(len(history_list) - 1):
+        newer = history_list[i]
+        older = history_list[i + 1]
+        diff = newer.diff_against(older)
+        changes = [
+            {
+                'field': c.field,
+                'old': c.old,
+                'new': c.new,
+            } for c in diff.changes
+        ]
+        if changes:
+            diffs.append({
+                'date': newer.history_date,
+                'user': newer.history_user.username if newer.history_user else None,
+                'changes': changes
+            })
+
+    return render(request, 'students/student_form.html', {
+        'form': form,
+        'student': student,
+        'history': history,
+        'diffs': diffs,
+    })
 
 @login_required
 def student_delete(request, pk):

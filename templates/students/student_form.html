@@ -81,6 +81,30 @@
         content: " *";
         color: #dc3545;
     }
+
+    .table {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table th {
+    font-weight: 600;
+    text-align: center;
+    background-color: #f8f9fa;
+}
+
+.table td {
+    font-size: 14px;
+    vertical-align: top;
+}
+
+ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
 </style>
 {% endblock %}
 
@@ -308,6 +332,62 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check-lg me-2"></i>Зберегти
                         </button>
+                        {% if student and history %}
+<div class="form-section mt-5">
+    <h5 class="section-header"><i class="bi bi-clock-history me-2"></i>Історія змін</h5>
+    <div class="table-responsive">
+        <table class="table table-sm table-striped table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Дата</th>
+                    <th>Користувач</th>
+                    <th>Тип зміни</th>
+                    <th>Деталі змін</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in history %}
+                <tr>
+                    <td>{{ record.history_date|date:"d.m.Y H:i" }}</td>
+                    <td>
+                        {% if record.history_user %}
+                            {{ record.history_user.username }}
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if record.history_type == '+' %}
+                            <span class="text-success">➕ Створення</span>
+                        {% elif record.history_type == '~' %}
+                            <span class="text-primary">✏️ Редагування</span>
+                        {% elif record.history_type == '-' %}
+                            <span class="text-danger">❌ Видалення</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% for d in diffs %}
+                            {% if d.date == record.history_date %}
+                                <ul style="margin: 0; padding-left: 15px;">
+                                    {% for change in d.changes %}
+                                        <li>
+                                            <strong>{{ change.field }}</strong>: 
+                                            <span class="text-danger">{{ change.old }}</span> → 
+                                            <span class="text-success">{{ change.new }}</span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
                     </div>
                 </div>
             </form>

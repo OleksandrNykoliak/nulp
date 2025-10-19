@@ -1,5 +1,7 @@
 from django.db import models
 from django.utils import timezone
+from simple_history.models import HistoricalRecords
+
 class Student(models.Model):
     INSTITUTE_CHOICES = [
         ('ІАДУ', 'ІАДУ'),
@@ -137,7 +139,8 @@ class Student(models.Model):
     registration_dormitory = models.IntegerField(choices=DORMITORY_NUMBERS, blank=True, null=True, verbose_name="Номер гуртожитку реєстрації")
     deregistration_date = models.DateField(blank=True, null=True, verbose_name="Дата зняття з реєстрації")
     notes = models.TextField(blank=True, null=True, verbose_name="Примітки")
-
+    history = HistoricalRecords()
+    
     @property
     def dormitory_address(self):
         return self.DORMITORY_ADDRESSES.get(self.dormitory_number, "___")
