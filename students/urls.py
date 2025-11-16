@@ -14,4 +14,9 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='students/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('export/', views.student_export, name='student_export'),  # Додайте цей рядок
+    path('<int:pk>/archive/', views.archive_student, name='archive_student'),
+    path('archive/<int:pk>/unarchive/', views.unarchive_student, name='unarchive_student'),
+    path('archive/', views.student_archive_list, name='student_archive_list'),
+    path('archive/<int:pk>/', views.student_archive_detail, name='student_archive_detail'),
+    path('all/', views.combined_student_list, name='combined_student_list'),
 ]

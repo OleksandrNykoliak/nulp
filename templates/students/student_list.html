@@ -1,53 +1,60 @@
 {% extends 'base.html' %}
-{% block title %}Список студентів{% endblock %}
+{% block title %}{% if show_archived %}Всі студенти{% else %}Список студентів{% endif %}{% endblock %}
 {% block content %}
 
-    </div>
-
-
-<div style="text-align: right; margin-right:20px;">
+<div style="text-align: right; margin-right:20px; margin-bottom: 20px;">
     <a href="{% url 'student_export' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" 
        class="btn btn-sm btn-success me-2">
         <i class="fas fa-download"></i> Друкувати (Excel)
     </a>
+    <!-- Кнопки для навігації -->
+    <div class="btn-group me-2">
+        <a href="{% url 'student_list' %}" class="btn btn-sm btn-outline-primary">Активні студенти</a>
+        <a href="{% url 'combined_student_list' %}" class="btn btn-sm btn-outline-info">Всі студенти</a>
+        <a href="{% url 'student_archive_list' %}" class="btn btn-sm btn-outline-secondary">Архів</a>
+    </div>
     
     <a href="{% url 'student_create' %}" class="btn btn-primary">Додати студента</a>
 </div>
 
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Фільтри пошуку</h5>
+    </div>
     <div class="card-body">
         <form method="get" id="filter-form" class="row g-3">
-                  <div class="col-md-2">
-            <label for="from_date_of_birth" class="form-label">Дата народження (від)</label>
-            <input type="date" name="from_date_of_birth" id="from_date_of_birth" class="form-control" 
-                   value="{{ request.GET.from_date_of_birth }}">
-        </div>
-        <div class="col-md-2">
-            <label for="to_date_of_birth" class="form-label">Дата народження (до)</label>
-            <input type="date" name="to_date_of_birth" id="to_date_of_birth" class="form-control" 
-                   value="{{ request.GET.to_date_of_birth }}">
-        </div>
+            <div class="col-md-2">
+                <label for="from_date_of_birth" class="form-label">Дата народження (від)</label>
+                <input type="date" name="from_date_of_birth" id="from_date_of_birth" class="form-control" 
+                       value="{{ request.GET.from_date_of_birth }}">
+            </div>
+            <div class="col-md-2">
+                <label for="to_date_of_birth" class="form-label">Дата народження (до)</label>
+                <input type="date" name="to_date_of_birth" id="to_date_of_birth" class="form-control" 
+                       value="{{ request.GET.to_date_of_birth }}">
+            </div>
 
-        <div class="col-md-2">
-            <label for="from_enrollment_year" class="form-label">Дата вступу (від)</label>
-            <input type="date" name="from_enrollment_year" id="from_enrollment_year" class="form-control" 
-                   value="{{ request.GET.from_enrollment_year }}">
-        </div>
-        <div class="col-md-2">
-            <label for="to_enrollment_year" class="form-label">Дата вступу (до)</label>
-            <input type="date" name="to_enrollment_year" id="to_enrollment_year" class="form-control" 
-                   value="{{ request.GET.to_enrollment_year }}">
-        </div>
+            <div class="col-md-2">
+                <label for="from_enrollment_year" class="form-label">Дата вступу (від)</label>
+                <input type="date" name="from_enrollment_year" id="from_enrollment_year" class="form-control" 
+                       value="{{ request.GET.from_enrollment_year }}">
+            </div>
+            <div class="col-md-2">
+                <label for="to_enrollment_year" class="form-label">Дата вступу (до)</label>
+                <input type="date" name="to_enrollment_year" id="to_enrollment_year" class="form-control" 
+                       value="{{ request.GET.to_enrollment_year }}">
+            </div>
 
-        <div class="col-md-2">
-            <label for="from_registration_date" class="form-label">Дата реєстрації (від)</label>
-            <input type="date" name="from_registration_date" id="from_registration_date" class="form-control" 
-                   value="{{ request.GET.from_registration_date }}">
-        </div>
-        <div class="col-md-2">
-            <label for="to_registration_date" class="form-label">Дата реєстрації (до)</label>
-            <input type="date" name="to_registration_date" id="to_registration_date" class="form-control" 
-                   value="{{ request.GET.to_registration_date }}">
-        </div>
+            <div class="col-md-2">
+                <label for="from_registration_date" class="form-label">Дата реєстрації (від)</label>
+                <input type="date" name="from_registration_date" id="from_registration_date" class="form-control" 
+                       value="{{ request.GET.from_registration_date }}">
+            </div>
+            <div class="col-md-2">
+                <label for="to_registration_date" class="form-label">Дата реєстрації (до)</label>
+                <input type="date" name="to_registration_date" id="to_registration_date" class="form-control" 
+                       value="{{ request.GET.to_registration_date }}">
+            </div>
             <div class="col-md-3">
                 <label for="search" class="form-label">Пошук (ПІБ або телефон)</label>
                 <input type="text" name="search" id="search" class="form-control" 
@@ -93,19 +100,17 @@
                 </select>
             </div>
 
-            
             <div class="col-md-2 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100">Застосувати</button>
             </div>
-                {% if request.GET %}
-            <a href="{% url 'student_list' %}" class="btn btn-sm btn-outline-secondary">Очистити фільтри</a>
-        {% endif %}
+            {% if request.GET %}
+            <div class="col-12">
+                <a href="{% url 'student_list' %}" class="btn btn-sm btn-outline-secondary">Очистити фільтри</a>
+            </div>
+            {% endif %}
         </form>
-        
     </div>
-    
 </div>
-
 
 <div class="card">
     <div class="card-body">
@@ -114,6 +119,9 @@
             <div>
                 <strong>Знайдено записів:</strong> {{ students.paginator.count }}
                 <span class="text-muted ms-2">(Сторінка {{ students.number }} з {{ students.paginator.num_pages }})</span>
+                {% if show_archived %}
+                    <span class="badge bg-info ms-2">Показано всіх студентів</span>
+                {% endif %}
             </div>
         </div>
         
@@ -121,6 +129,7 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
+                        <th>Статус</th>
                         <th>ПІБ</th>
                         <th>Дата народження</th>
                         <th>№ гурт.</th>
@@ -135,25 +144,71 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for student in students %}
-                    <tr>
-                        <td>{{ student.full_name }}</td>
-                        <td>{% if student.date_of_birth %}{{ student.date_of_birth|date:"d.m.Y" }}{% else %}-{% endif %}</td>
-                        <td>{% if student.dormitory_number %}{{ student.dormitory_number }}{% else %}-{% endif %}</td>
-                        <td>{% if student.room_number %}{{ student.room_number }}{% else %}-{% endif %}</td>
-                        <td>{{ student.institute|default:"-" }}</td>
-                        <td>{{ student.course|default:"-" }}</td>
-                        <td>{% if student.registration_date %}{{ student.registration_date|date:"d.m.Y" }}{% else %}-{% endif %}</td>
-                        <td>{% if student.enrollment_year %}{{ student.enrollment_year|date:"d.m.Y" }}{% else %}-{% endif %}</td>
-                        <td>{% if student.graduation_year %}{{ student.graduation_year|date:"d.m.Y" }}{% else %}-{% endif %}</td>
-                        <td>{% if student.notes %}{{ student.notes|truncatewords:5 }}{% else %}-{% endif %}</td>
-                        <td>
-                            <div class="btn-group">
-                                <a href="{% url 'student_update' student.pk %}" class="btn btn-sm btn-outline-primary">Редагувати</a>
-                                <a href="{% url 'student_delete' student.pk %}" class="btn btn-sm btn-outline-danger">Видалити</a>
-                            </div>
-                        </td>
-                    </tr>
+                    {% for student_data in students %}
+                        {# Для комбінованого списку #}
+                        {% if show_archived %}
+                            {% with student=student_data.object is_archived=student_data.is_archived %}
+                            <tr class="{% if is_archived %}table-secondary{% endif %}">
+                                <td>
+                                    {% if is_archived %}
+                                        <span class="badge bg-secondary">Архів</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Навчається</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ student.full_name }}</td>
+                                <td>{% if student.date_of_birth %}{{ student.date_of_birth|date:"d.m.Y" }}{% else %}-{% endif %}</td>
+                                <td>{% if student.dormitory_number %}{{ student.dormitory_number }}{% else %}-{% endif %}</td>
+                                <td>{% if student.room_number %}{{ student.room_number }}{% else %}-{% endif %}</td>
+                                <td>{{ student.institute|default:"-" }}</td>
+                                <td>{{ student.course|default:"-" }}</td>
+                                <td>{% if student.registration_date %}{{ student.registration_date|date:"d.m.Y" }}{% else %}-{% endif %}</td>
+                                <td>{% if student.enrollment_year %}{{ student.enrollment_year|date:"d.m.Y" }}{% else %}-{% endif %}</td>
+                                <td>{% if student.graduation_year %}{{ student.graduation_year|date:"d.m.Y" }}{% else %}-{% endif %}</td>
+                                <td>{% if student.notes %}{{ student.notes|truncatewords:5 }}{% else %}-{% endif %}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        {% if is_archived %}
+                                            <!-- Для архівних студентів -->
+                                            <a href="{% url 'student_archive_detail' student.pk %}" class="btn btn-sm btn-outline-info">Переглянути</a>
+                                            <a href="{% url 'unarchive_student' student.pk %}" class="btn btn-sm btn-outline-success">Відновити</a>
+                                        {% else %}
+                                            <!-- Для активних студентів -->
+                                            <a href="{% url 'student_update' student.pk %}" class="btn btn-sm btn-outline-primary">Редагувати</a>
+                                            <a href="{% url 'archive_student' student.pk %}" class="btn btn-sm btn-outline-warning">В архів</a>
+                                            <a href="{% url 'student_delete' student.pk %}" class="btn btn-sm btn-outline-danger">Видалити</a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endwith %}
+                        {# Для звичайного списку (тільки активні) #}
+                        {% else %}
+                            {% with student=student_data is_archived=False %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-success">Навчається</span>
+                                </td>
+                                <td>{{ student.full_name }}</td>
+                                <td>{% if student.date_of_birth %}{{ student.date_of_birth|date:"d.m.Y" }}{% else %}-{% endif %}</td>
+                                <td>{% if student.dormitory_number %}{{ student.dormitory_number }}{% else %}-{% endif %}</td>
+                                <td>{% if student.room_number %}{{ student.room_number }}{% else %}-{% endif %}</td>
+                                <td>{{ student.institute|default:"-" }}</td>
+                                <td>{{ student.course|default:"-" }}</td>
+                                <td>{% if student.registration_date %}{{ student.registration_date|date:"d.m.Y" }}{% else %}-{% endif %}</td>
+                                <td>{% if student.enrollment_year %}{{ student.enrollment_year|date:"d.m.Y" }}{% else %}-{% endif %}</td>
+                                <td>{% if student.graduation_year %}{{ student.graduation_year|date:"d.m.Y" }}{% else %}-{% endif %}</td>
+                                <td>{% if student.notes %}{{ student.notes|truncatewords:5 }}{% else %}-{% endif %}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'student_update' student.pk %}" class="btn btn-sm btn-outline-primary">Редагувати</a>
+                                        <a href="{% url 'archive_student' student.pk %}" class="btn btn-sm btn-outline-warning">В архів</a>
+                                        <a href="{% url 'student_delete' student.pk %}" class="btn btn-sm btn-outline-danger">Видалити</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endwith %}
+                        {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
@@ -203,13 +258,6 @@
                         <a class="page-link" href="?page={{ students.paginator.num_pages }}{% if filter_params %}&{{ filter_params }}{% endif %}" aria-label="Остання">
                             <span aria-hidden="true">&raquo;&raquo;</span>
                         </a>
-                    </li>
-                {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">&raquo;</span>
-                    </li>
-                    <li class="page-item disabled">
-                        <span class="page-link">&raquo;&raquo;</span>
                     </li>
                 {% endif %}
             </ul>

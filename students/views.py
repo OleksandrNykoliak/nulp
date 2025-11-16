@@ -1,7 +1,7 @@
 # views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
-from .models import Student
+from .models import Student, StudentArchive
 from .forms import StudentForm, StudentSearchForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -376,3 +376,144 @@ def student_export(request):
     wb.save(response)
     return response
 
+
+
+
+# Додаємо ці функції до вашого існуючого views.py
+
+@login_required
+def archive_student(request, pk):
+    student = get_object_or_404(Student, pk=pk)
+    
+    # Перевіряємо, чи студент вже в архіві
+    if hasattr(student, 'archive_record'):
+        messages.warning(request, f'Студент {student.full_name} вже знаходиться в архіві.')
+        return redirect('student_list')
+    
+    # Створюємо запис в архіві
+    archive_record = StudentArchive(
+        original_student=student,
+        archived_by=request.user,
+        # Копіюємо всі поля
+        created_at=student.created_at,
+        type=student.type,
+        gender=student.gender,
+        full_name=student.full_name,
+        date_of_birth=student.date_of_birth,
+        phone=student.phone,
+        institute=student.institute,
+        course=student.course,
+        enrollment_year=student.enrollment_year,
+        graduation_year=student.graduation_year,
+        passport_data=student.passport_data,
+        passport_record_number=student.passport_record_number,
+        passport_issue_date=student.passport_issue_date,
+        passport_issued_by=student.passport_issued_by,
+        country=student.country,
+        region=student.region,
+        region_rajon=student.region_rajon,
+        category=student.category,
+        city=student.city,
+        address=student.address,
+        dormitory_number=student.dormitory_number,
+        room_number=student.room_number,
+        settlement_date=student.settlement_date,
+        eviction_date=student.eviction_date,
+        home_add_country=student.home_add_country,
+        home_add_region=student.home_add_region,
+        home_add_rajon=student.home_add_rajon,
+        home_add_category=student.home_add_category,
+        home_add_city=student.home_add_city,
+        home_add_street=student.home_add_street,
+        home_add_building=student.home_add_building,
+        home_add_apartment=student.home_add_apartment,
+        contract_date=student.contract_date,
+        contract_number=student.contract_number,
+        contract_termination_date=student.contract_termination_date,
+        registration_consent=student.registration_consent,
+        registration_date=student.registration_date,
+        registration_dormitory=student.registration_dormitory,
+        deregistration_date=student.deregistration_date,
+        notes=student.notes,
+    )
+    archive_record.save()
+    
+    messages.success(request, f'Студента {student.full_name} успішно архівовано.')
+    return redirect('student_list')
+
+
+
+@login_required
+def unarchive_student(request, pk):
+    archive_record = get_object_or_404(StudentArchive, pk=pk)
+    student_name = archive_record.full_name
+    archive_record.delete()
+    
+    messages.success(request, f'Студента {student_name} успішно відновлено з архіву.')
+    return redirect('student_archive_list')
+
+@login_required
+def student_archive_list(request):
+    archives = StudentArchive.objects.all().order_by('full_name')
+    
+    paginator = Paginator(archives, 50)
+    page = request.GET.get('page')
+    
+    try:
+        archives_page = paginator.page(page)
+    except PageNotAnInteger:
+        archives_page = paginator.page(1)
+    except EmptyPage:
+        archives_page = paginator.page(paginator.num_pages)
+    
+    context = {
+        'archives': archives_page,
+    }
+    return render(request, 'students/student_archive_list.html', context)
+
+@login_required
+def student_archive_detail(request, pk):
+    archive = get_object_or_404(StudentArchive, pk=pk)
+    return render(request, 'students/student_archive_detail.html', {'archive': archive})
+
+@login_required
+def combined_student_list(request):
+    """Список всіх студентів (активні + архівні)"""
+    active_students = Student.objects.all().order_by('full_name')
+    archived_students = StudentArchive.objects.all().order_by('full_name')
+    
+    # Об'єднуємо в один список з позначкою типу
+    all_students = []
+    
+    for student in active_students:
+        all_students.append({
+            'object': student,
+            'type': 'active',
+            'is_archived': False
+        })
+    
+    for archive in archived_students:
+        all_students.append({
+            'object': archive,
+            'type': 'archived',
+            'is_archived': True
+        })
+    
+    # Сортуємо за ПІБ
+    all_students.sort(key=lambda x: x['object'].full_name)
+    
+    paginator = Paginator(all_students, 50)
+    page = request.GET.get('page')
+    
+    try:
+        students_page = paginator.page(page)
+    except PageNotAnInteger:
+        students_page = paginator.page(1)
+    except EmptyPage:
+        students_page = paginator.page(paginator.num_pages)
+    
+    context = {
+        'students': students_page,
+        'show_archived': True
+    }
+    return render(request, 'students/student_list.html', context)

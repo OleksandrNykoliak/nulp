@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Архів студентів{% endblock %}
+{% block content %}
+
+<div style="text-align: right; margin-right:20px;">
+    <div class="btn-group me-2">
+        <a href="{% url 'student_list' %}" class="btn btn-sm btn-outline-primary">Активні студенти</a>
+        <a href="{% url 'combined_student_list' %}" class="btn btn-sm btn-outline-info">Всі студенти</a>
+        <a href="{% url 'student_archive_list' %}" class="btn btn-sm btn-outline-secondary active">Архів</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Архів студентів</h5>
+    </div>
+    <div class="card-body">
+        {% if archives %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ПІБ</th>
+                        <th>Дата народження</th>
+                        <th>№ гурт.</th>
+                        <th>№ кім.</th>
+                        <th>ННІ</th>
+                        <th>Курс</th>
+                        <th>Дата архівації</th>
+                        <th>Дії</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for archive in archives %}
+                    <tr class="table-secondary">
+                        <td>{{ archive.full_name }}</td>
+                        <td>{% if archive.date_of_birth %}{{ archive.date_of_birth|date:"d.m.Y" }}{% else %}-{% endif %}</td>
+                        <td>{% if archive.dormitory_number %}{{ archive.dormitory_number }}{% else %}-{% endif %}</td>
+                        <td>{% if archive.room_number %}{{ archive.room_number }}{% else %}-{% endif %}</td>
+                        <td>{{ archive.institute|default:"-" }}</td>
+                        <td>{{ archive.course|default:"-" }}</td>
+                        <td>{{ archive.archived_at|date:"d.m.Y H:i" }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'student_archive_detail' archive.pk %}" class="btn btn-sm btn-outline-info">Переглянути</a>
+                                <a href="{% url 'unarchive_student' archive.pk %}" class="btn btn-sm btn-outline-success">Відновити</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Пагінація для архіву -->
+        {% if archives.paginator.num_pages > 1 %}
+        <nav aria-label="Навігація по сторінкам">
+            <ul class="pagination justify-content-center">
+                {% if archives.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="Перша">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ archives.previous_page_number }}" aria-label="Попередня">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in archives.paginator.page_range %}
+                    {% if archives.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > archives.number|add:'-3' and num < archives.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if archives.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ archives.next_page_number }}" aria-label="Наступна">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ archives.paginator.num_pages }}" aria-label="Остання">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <p class="text-center text-muted">Архів порожній.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

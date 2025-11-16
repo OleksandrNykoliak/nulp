@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
+from django.contrib.auth.models import User
 
 class Student(models.Model):
     INSTITUTE_CHOICES = [
@@ -77,22 +78,21 @@ class Student(models.Model):
         22: "м. Львів, вул. Володимира Великого, 57",
         23: "м. Львів, вул. Під Голоском, 23",
     }
-    
     CITY_TYPE_CHOICES = [
-            ('city', 'м.'),
-            ('settlement', 'с-ще'),
-            ('village', 'с.'),
-            ('villagesmt', 'смт.'),
-        ]
+        ('city', 'м.'),
+        ('settlement', 'с-ще'),
+        ('village', 'с.'),
+        ('villagesmt', 'смт.'),
+    ]
     
     PERSON_TYPE_CHOICES = [
-            ('student', 'Студент'),
-            ('postgraduate', 'Аспірант'),
-            ('doctoral', 'Докторант'),
-            ('external', 'Сторонній'),
-            ('staff', 'Співробітник'),
-            ('child', 'Дитина'),
-        ]
+        ('student', 'Студент'),
+        ('postgraduate', 'Аспірант'),
+        ('doctoral', 'Докторант'),
+        ('external', 'Сторонній'),
+        ('staff', 'Співробітник'),
+        ('child', 'Дитина'),
+    ]
     
     GENDER_CHOICES = [
         ('m', 'ч'),
@@ -175,11 +175,75 @@ class Student(models.Model):
 
         super().save(*args, **kwargs)
 
-
     class Meta:
         verbose_name = "Студент"
         verbose_name_plural = "Студенти"
-        
-        
-        
+
+class StudentArchive(models.Model):
+    # Всі поля з моделі Student
+    original_student = models.OneToOneField(
+        Student, 
+        on_delete=models.CASCADE, 
+        related_name='archive_record',
+        verbose_name="Оригінальний студент"
+    )
+    archived_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата архівації")
+    archived_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        verbose_name="Ким архівовано"
+    )
     
+    # Дублюємо всі поля для незалежності даних
+    created_at = models.DateTimeField(verbose_name="Дата створення")
+    type = models.CharField(max_length=50, choices=Student.PERSON_TYPE_CHOICES, blank=True, null=True, verbose_name="Тип")
+    gender = models.CharField(max_length=50, choices=Student.GENDER_CHOICES, blank=True, null=True, verbose_name="Стать")
+    full_name = models.CharField(max_length=200, verbose_name="ПІБ студента")
+    date_of_birth = models.DateField(blank=True, null=True, verbose_name="Дата народження")
+    phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Телефон")
+    institute = models.CharField(max_length=10, choices=Student.INSTITUTE_CHOICES, blank=True, null=True, verbose_name="ННІ")
+    course = models.IntegerField(choices=Student.COURSE_CHOICES, blank=True, null=True, verbose_name="Курс")
+    enrollment_year = models.DateField(blank=True, null=True, verbose_name="Рік вступу")
+    graduation_year = models.DateField(blank=True, null=True, verbose_name="Рік закінчення навчання")
+    passport_data = models.CharField(max_length=50, blank=True, null=True, verbose_name="Серія та номер паспорта/ID")
+    passport_record_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="запис №")
+    passport_issue_date = models.DateField(blank=True, null=True, verbose_name="Дата видачі паспорта/ID")
+    passport_issued_by = models.CharField(max_length=200, blank=True, null=True, verbose_name="Ким виданий паспорт/ID")
+    country = models.CharField(max_length=50, default="Україна", blank=True, null=True, verbose_name="Країна")
+    region = models.CharField(max_length=50, choices=Student.UKRAINIAN_REGIONS, blank=True, null=True, verbose_name="Область")
+    region_rajon = models.CharField(max_length=200, blank=True, null=True, verbose_name="Район")
+    category = models.CharField(max_length=50, choices=Student.CITY_TYPE_CHOICES, blank=True, null=True, verbose_name="Категорія")
+    city = models.CharField(max_length=50, blank=True, null=True, verbose_name="Місто")
+    address = models.CharField(max_length=200, blank=True, null=True, verbose_name="Вулиця")
+    dormitory_number = models.IntegerField(choices=Student.DORMITORY_NUMBERS, blank=True, null=True, verbose_name="Номер гуртожитку")
+    room_number = models.CharField(max_length=10, blank=True, null=True, verbose_name="Номер кімнати")
+    settlement_date = models.DateField(blank=True, null=True, verbose_name="Дата поселення")
+    eviction_date = models.DateField(blank=True, null=True, verbose_name="Дата виселення")
+    home_add_country = models.CharField(max_length=50, default="Україна", blank=True, null=True, verbose_name="Країна")
+    home_add_region = models.CharField(max_length=50, choices=Student.UKRAINIAN_REGIONS, blank=True, null=True, verbose_name="Область")
+    home_add_rajon = models.CharField(max_length=200, blank=True, null=True, verbose_name="Район")
+    home_add_category = models.CharField(max_length=50, choices=Student.CITY_TYPE_CHOICES, blank=True, null=True, verbose_name="Категорія")
+    home_add_city = models.CharField(max_length=50, blank=True, null=True, verbose_name="Місто")
+    home_add_street = models.CharField(max_length=100, blank=True, null=True, verbose_name="Вулиця")
+    home_add_building = models.CharField(max_length=20, blank=True, null=True, verbose_name="Будинок")
+    home_add_apartment = models.CharField(max_length=20, blank=True, null=True, verbose_name="Квартира")
+    contract_date = models.DateField(blank=True, null=True, verbose_name="Дата договору")
+    contract_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="Номер договору")
+    contract_termination_date = models.DateField(blank=True, null=True, verbose_name="Дата розірвання договору")
+    registration_consent = models.BooleanField(default=False, verbose_name="Згода на реєстрацію")
+    registration_date = models.DateField(blank=True, null=True, verbose_name="Дата реєстрації прописки")
+    registration_dormitory = models.IntegerField(choices=Student.DORMITORY_NUMBERS, blank=True, null=True, verbose_name="Номер гуртожитку реєстрації")
+    deregistration_date = models.DateField(blank=True, null=True, verbose_name="Дата зняття з реєстрації")
+    notes = models.TextField(blank=True, null=True, verbose_name="Примітки")
+
+    @property
+    def dormitory_address(self):
+        return Student.DORMITORY_ADDRESSES.get(self.dormitory_number, "___")
+
+    def __str__(self):
+        return f"Архів: {self.full_name}"
+
+    class Meta:
+        verbose_name = "Архівний студент"
+        verbose_name_plural = "Архівні студенти"

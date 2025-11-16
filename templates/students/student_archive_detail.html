@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Архівний студент: {{ archive.full_name }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-secondary text-white">
+        <h4 class="mb-0"><i class="bi bi-archive me-2"></i>Архівний студент: {{ archive.full_name }}</h4>
+    </div>
+    <div class="card-body">
+        <!-- Використовуємо той самий шаблон що і для редагування, але тільки для перегляду -->
+        <div class="row">
+            <!-- Перша колонка -->
+            <div class="col-md-4">
+                <div class="form-section">
+                    <h5 class="section-header"><i class="bi bi-person-circle me-2"></i>Студент</h5>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>ПІБ:</strong></label>
+                        <p>{{ archive.full_name }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Стать:</strong></label>
+                        <p>{{ archive.get_gender_display|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Тип:</strong></label>
+                        <p>{{ archive.get_type_display|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Дата народження:</strong></label>
+                        <p>{% if archive.date_of_birth %}{{ archive.date_of_birth|date:"d.m.Y" }}{% else %}-{% endif %}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Телефон:</strong></label>
+                        <p>{{ archive.phone|default:"-" }}</p>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h5 class="section-header"><i class="bi bi-book me-2"></i>Інститут</h5>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>ННІ:</strong></label>
+                        <p>{{ archive.institute|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Курс:</strong></label>
+                        <p>{{ archive.course|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Рік вступу:</strong></label>
+                        <p>{% if archive.enrollment_year %}{{ archive.enrollment_year|date:"d.m.Y" }}{% else %}-{% endif %}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Рік закінчення:</strong></label>
+                        <p>{% if archive.graduation_year %}{{ archive.graduation_year|date:"d.m.Y" }}{% else %}-{% endif %}</p>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h5 class="section-header"><i class="bi bi-card-text me-2"></i>Паспортні дані</h5>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Серія та номер:</strong></label>
+                        <p>{{ archive.passport_data|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Запис №:</strong></label>
+                        <p>{{ archive.passport_record_number|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Дата видачі:</strong></label>
+                        <p>{% if archive.passport_issue_date %}{{ archive.passport_issue_date|date:"d.m.Y" }}{% else %}-{% endif %}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Ким виданий:</strong></label>
+                        <p>{{ archive.passport_issued_by|default:"-" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Друга колонка -->
+            <div class="col-md-4">
+                <div class="form-section">
+                    <h5 class="section-header"><i class="bi bi-house me-2"></i>Місце народження</h5>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Країна:</strong></label>
+                        <p>{{ archive.country|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Область:</strong></label>
+                        <p>{{ archive.region|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Район:</strong></label>
+                        <p>{{ archive.region_rajon|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Категорія:</strong></label>
+                        <p>{{ archive.get_category_display|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Місто:</strong></label>
+                        <p>{{ archive.city|default:"-" }}</p>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h5 class="section-header"><i class="bi bi-house-door me-2"></i>Домашня адреса</h5>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Країна:</strong></label>
+                        <p>{{ archive.home_add_country|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Область:</strong></label>
+                        <p>{{ archive.home_add_region|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Район:</strong></label>
+                        <p>{{ archive.home_add_rajon|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Категорія:</strong></label>
+                        <p>{{ archive.get_home_add_category_display|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Місто:</strong></label>
+                        <p>{{ archive.home_add_city|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Вулиця:</strong></label>
+                        <p>{{ archive.home_add_street|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Будинок:</strong></label>
+                        <p>{{ archive.home_add_building|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Квартира:</strong></label>
+                        <p>{{ archive.home_add_apartment|default:"-" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Третя колонка -->
+            <div class="col-md-4">
+                <div class="form-section">
+                    <h5 class="section-header"><i class="bi bi-building me-2"></i>Проживання в гуртожитку</h5>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Номер гуртожитку:</strong></label>
+                        <p>{{ archive.dormitory_number|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Адреса гуртожитку:</strong></label>
+                        <p>{{ archive.dormitory_address|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Номер кімнати:</strong></label>
+                        <p>{{ archive.room_number|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Дата поселення:</strong></label>
+                        <p>{% if archive.settlement_date %}{{ archive.settlement_date|date:"d.m.Y" }}{% else %}-{% endif %}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Дата виселення:</strong></label>
+                        <p>{% if archive.eviction_date %}{{ archive.eviction_date|date:"d.m.Y" }}{% else %}-{% endif %}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Дата договору:</strong></label>
+                        <p>{% if archive.contract_date %}{{ archive.contract_date|date:"d.m.Y" }}{% else %}-{% endif %}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Номер договору:</strong></label>
+                        <p>{{ archive.contract_number|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Дата розірвання:</strong></label>
+                        <p>{% if archive.contract_termination_date %}{{ archive.contract_termination_date|date:"d.m.Y" }}{% else %}-{% endif %}</p>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h5 class="section-header"><i class="bi bi-clipboard-check me-2"></i>Реєстрація</h5>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Згода на реєстрацію:</strong></label>
+                        <p>{% if archive.registration_consent %}Так{% else %}Ні{% endif %}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Дата реєстрації:</strong></label>
+                        <p>{% if archive.registration_date %}{{ archive.registration_date|date:"d.m.Y" }}{% else %}-{% endif %}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Гуртожиток реєстрації:</strong></label>
+                        <p>{{ archive.registration_dormitory|default:"-" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Дата зняття:</strong></label>
+                        <p>{% if archive.deregistration_date %}{{ archive.deregistration_date|date:"d.m.Y" }}{% else %}-{% endif %}</p>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h5 class="section-header"><i class="bi bi-chat-text me-2"></i>Примітка</h5>
+                    <div class="mb-3">
+                        <p>{{ archive.notes|default:"-"|linebreaks }}</p>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h5 class="section-header"><i class="bi bi-info-circle me-2"></i>Інформація про архівацію</h5>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Дата архівації:</strong></label>
+                        <p>{{ archive.archived_at|date:"d.m.Y H:i" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Ким архівовано:</strong></label>
+                        <p>{{ archive.archived_by.username|default:"-" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+            <a href="{% url 'student_archive_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Назад до архіву
+            </a>
+            <div>
+                <a href="{% url 'unarchive_student' archive.pk %}" class="btn btn-success">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i>Відновити з архіву
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
