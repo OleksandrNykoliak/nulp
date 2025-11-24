@@ -247,3 +247,61 @@ class StudentArchive(models.Model):
     class Meta:
         verbose_name = "Архівний студент"
         verbose_name_plural = "Архівні студенти"
+        
+        
+    @property
+    def total_penalty_points(self):
+        return self.penalties.filter(status='active').aggregate(total=models.Sum('points'))['total'] or 0
+
+    @property
+    def active_penalties(self):
+        return self.penalties.filter(status='active')
+
+    @property
+    def has_penalties(self):
+        return self.penalties.filter(status='active').exists()
+        
+        
+class Penalty(models.Model):
+    SEVERITY_CHOICES = [
+        (1, 'Незначне порушення'),
+        (2, 'Середнє порушення'), 
+        (3, 'Серйозне порушення'),
+        (4, 'Критичне порушення'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('active', 'Активний'),
+        ('cancelled', 'Скасований'),
+        ('expired', 'Неактивний'),
+    ]
+    
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, verbose_name="Студент", related_name='penalties')
+    points = models.PositiveIntegerField(default=1, verbose_name="Штрафні бали")
+    reason = models.TextField(verbose_name="Причина штрафу")
+    comment = models.TextField(blank=True, null=True, verbose_name="Коментар")
+    severity = models.IntegerField(choices=SEVERITY_CHOICES, default=1, verbose_name="Важкість порушення")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active', verbose_name="Статус")
+    penalty_date = models.DateField(default=timezone.now, verbose_name="Дата порушення")
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name="Ким видано")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата створення")
+    cancelled_at = models.DateTimeField(blank=True, null=True, verbose_name="Дата скасування")
+    cancelled_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+                                   related_name='cancelled_penalties', verbose_name="Ким скасовано")
+    cancellation_reason = models.TextField(blank=True, null=True, verbose_name="Причина скасування")
+    
+    history = HistoricalRecords()
+    
+    def __str__(self):
+        return f"{self.student.full_name} - {self.points} бал(ів) - {self.get_severity_display()}"
+    
+    @property
+    def is_active(self):
+        return self.status == 'active'
+    
+    class Meta:
+        verbose_name = "Штрафний бал"
+        verbose_name_plural = "Штрафні бали"
+        ordering = ['-penalty_date', '-created_at']
+
+# Додайте властивість до моделі Student для підрахунку загальних штрафних балів

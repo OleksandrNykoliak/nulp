@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% block title %}Студенти з штрафними балами{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4>Студенти з штрафними балами</h4>
+    <div>
+        <a href="{% url 'penalty_list' %}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-list"></i> Всі штрафи
+        </a>
+        <a href="{% url 'penalty_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Додати штраф
+        </a>
+    </div>
+</div>
+
+<!-- Форма фільтрації -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Фільтри пошуку</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="student_search" class="form-label">Пошук студента</label>
+                <input type="text" name="student_search" id="student_search" class="form-control" 
+                       value="{{ request.GET.student_search }}" placeholder="ПІБ студента">
+            </div>
+            <div class="col-md-3">
+                <label for="dormitory" class="form-label">Гуртожиток</label>
+                <select name="dormitory" id="dormitory" class="form-select">
+                    <option value="">---------</option>
+                    {% for value, label in form.fields.dormitory.choices %}
+                        {% if value %}
+                        <option value="{{ value }}" {% if request.GET.dormitory == value|stringformat:"s" %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Застосувати</button>
+                {% if request.GET %}
+                <a href="{% url 'students_with_penalties' %}" class="btn btn-outline-secondary">Очистити</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if students %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Студент</th>
+                        <th>Гурт.</th>
+                        <th>Кімн.</th>
+                        <th>ННІ</th>
+                        <th>Курс</th>
+                        <th>Загальні бали</th>
+                        <th>Кількість порушень</th>
+                        <th>Останнє порушення</th>
+                        <th>Дії</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr class="{% if student.total_points >= 5 %}table-danger{% elif student.total_points >= 3 %}table-warning{% endif %}">
+                        <td>
+                            <a href="{% url 'student_update' student.pk %}">
+                                {{ student.full_name }}
+                            </a>
+                        </td>
+                        <td>{{ student.dormitory_number|default:"-" }}</td>
+                        <td>{{ student.room_number|default:"-" }}</td>
+                        <td>{{ student.institute|default:"-" }}</td>
+                        <td>{{ student.course|default:"-" }}</td>
+                        <td>
+                            <span class="badge {% if student.total_points >= 5 %}bg-danger{% elif student.total_points >= 3 %}bg-warning{% else %}bg-info{% endif %}">
+                                {{ student.total_points }}
+                            </span>
+                        </td>
+                        <td>{{ student.active_penalties.count }}</td>
+                        <td>
+                            {% with last_penalty=student.active_penalties.first %}
+                                {% if last_penalty %}
+                                    {{ last_penalty.penalty_date|date:"d.m.Y" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'student_update' student.pk %}" 
+                                   class="btn btn-outline-primary"
+                                   data-bs-toggle="tooltip" data-bs-title="Перейти до студента">
+                                    <i class="fas fa-user-edit"></i>
+                                </a>
+                                <a href="{% url 'penalty_create_for_student' student.pk %}" 
+                                   class="btn btn-outline-warning"
+                                   data-bs-toggle="tooltip" data-bs-title="Додати штраф">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Пагінація -->
+        {% if students.paginator.num_pages > 1 %}
+        <nav aria-label="Навігація по сторінкам" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if students.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Перша">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ students.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Попередня">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in students.paginator.page_range %}
+                    {% if students.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > students.number|add:'-3' and num < students.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if students.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ students.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Наступна">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ students.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Остання">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <p class="text-center text-muted">Студентів з активними штрафними балами не знайдено.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

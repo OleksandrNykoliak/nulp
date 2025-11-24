@@ -394,7 +394,82 @@ ul {
         </div>
     </div>
 </div>
+
+{% if student %}
+<!-- Секція штрафних балів -->
+<div class="form-section mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="section-header"><i class="bi bi-exclamation-triangle me-2"></i>Штрафні бали</h5>
+        <div>
+            {% if student.total_penalty_points > 0 %}
+                <span class="badge {% if student.total_penalty_points >= 5 %}bg-danger{% elif student.total_penalty_points >= 3 %}bg-warning{% else %}bg-info{% endif %} me-2">
+                    Загальна сума: {{ student.total_penalty_points }} бал(ів)
+                </span>
+            {% endif %}
+            <a href="{% url 'penalty_create_for_student' student.pk %}" class="btn btn-sm btn-warning">
+                <i class="bi bi-plus-circle me-1"></i>Додати штраф
+            </a>
+        </div>
+    </div>
+
+    {% if student.active_penalties.exists %}
+    <div class="table-responsive">
+        <table class="table table-sm table-striped">
+            <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Бали</th>
+                    <th>Рівень</th>
+                    <th>Причина</th>
+                    <th>Ким видано</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for penalty in student.active_penalties %}
+                <tr>
+                    <td>{{ penalty.penalty_date|date:"d.m.Y" }}</td>
+                    <td>
+                        <span class="badge {% if penalty.points >= 3 %}bg-danger{% else %}bg-warning{% endif %}">
+                            {{ penalty.points }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge 
+                            {% if penalty.severity == 1 %}bg-secondary
+                            {% elif penalty.severity == 2 %}bg-info
+                            {% elif penalty.severity == 3 %}bg-warning
+                            {% else %}bg-danger{% endif %}">
+                            {{ penalty.get_severity_display }}
+                        </span>
+                    </td>
+                    <td>{{ penalty.reason }}</td>
+                    <td>{{ penalty.created_by.username|default:"-" }}</td>
+<td>
+    <div class="btn-group btn-group-sm">
+        <!-- <a href="{% url 'penalty_cancel' penalty.pk %}" class="btn btn-sm btn-outline-warning">
+            Скасувати
+        </a> -->
+        <a href="{% url 'penalty_delete' penalty.pk %}" class="btn btn-sm btn-outline-danger">
+            Видалити
+        </a>
+    </div>
+</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted text-center mb-0">Штрафних балів немає</p>
+    {% endif %}
+</div>
+{% endif %}
+
 {% endblock %}
+
+
+
 
 {% block extra_js %}
 <script>

@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% block title %}Штрафні бали{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4>Система штрафних балів</h4>
+    <div>
+        <a href="{% url 'students_with_penalties' %}" class="btn btn-info me-2">
+            <i class="fas fa-users"></i> Студенти з штрафами
+        </a>
+        <a href="{% url 'penalty_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Додати штраф
+        </a>
+    </div>
+</div>
+
+<!-- Форма фільтрації -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Фільтри пошуку</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="student_search" class="form-label">Пошук студента</label>
+                <input type="text" name="student_search" id="student_search" class="form-control" 
+                       value="{{ request.GET.student_search }}" placeholder="ПІБ студента">
+            </div>
+            <div class="col-md-2">
+                <label for="dormitory" class="form-label">Гуртожиток</label>
+                <select name="dormitory" id="dormitory" class="form-select">
+                    <option value="">---------</option>
+                    {% for value, label in form.fields.dormitory.choices %}
+                        {% if value %}
+                        <option value="{{ value }}" {% if request.GET.dormitory == value|stringformat:"s" %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="status" class="form-label">Статус</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">---------</option>
+                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Активні</option>
+                    <option value="all" {% if request.GET.status == 'all' %}selected{% endif %}>Всі</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="severity" class="form-label">Рівень порушення</label>
+                <select name="severity" id="severity" class="form-select">
+                    <option value="">---------</option>
+                    {% for value, label in form.fields.severity.choices %}
+                        {% if value %}
+                        <option value="{{ value }}" {% if request.GET.severity == value|stringformat:"s" %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="date_from" class="form-label">Дата від</label>
+                <input type="date" name="date_from" id="date_from" class="form-control" 
+                       value="{{ request.GET.date_from }}">
+            </div>
+            <div class="col-md-2">
+                <label for="date_to" class="form-label">Дата до</label>
+                <input type="date" name="date_to" id="date_to" class="form-control" 
+                       value="{{ request.GET.date_to }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Застосувати</button>
+                {% if request.GET %}
+                <a href="{% url 'penalty_list' %}" class="btn btn-outline-secondary">Очистити</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if penalties %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Студент</th>
+                        <th>Гурт.</th>
+                        <th>Бали</th>
+                        <th>Рівень</th>
+                        <th>Причина</th>
+                        <th>Дата порушення</th>
+                        <th>Статус</th>
+                        <th>Ким видано</th>
+                        <th>Дії</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for penalty in penalties %}
+                    <tr class="{% if not penalty.is_active %}table-secondary{% endif %}">
+                        <td>
+                            <a href="{% url 'student_update' penalty.student.pk %}">
+                                {{ penalty.student.full_name }}
+                            </a>
+                        </td>
+                        <td>{{ penalty.student.dormitory_number|default:"-" }}</td>
+                        <td>
+                            <span class="badge {% if penalty.points >= 3 %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ penalty.points }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if penalty.severity == 1 %}bg-secondary
+                                {% elif penalty.severity == 2 %}bg-info
+                                {% elif penalty.severity == 3 %}bg-warning
+                                {% else %}bg-danger{% endif %}">
+                                {{ penalty.get_severity_display }}
+                            </span>
+                        </td>
+                        <td>{{ penalty.reason|truncatewords:10 }}</td>
+                        <td>{{ penalty.penalty_date|date:"d.m.Y" }}</td>
+                        <td>
+                            {% if penalty.is_active %}
+                                <span class="badge bg-success">Активний</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Скасований</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ penalty.created_by.username|default:"-" }}</td>
+                       <td>
+                        <div class="btn-group btn-group-sm">
+                            {% if penalty.is_active %}
+                            <!-- <a href="{% url 'penalty_cancel' penalty.pk %}" 
+                            class="btn btn-outline-warning"
+                            data-bs-toggle="tooltip" data-bs-title="Скасувати">
+                                <i class="fas fa-ban"></i>
+                            </a> -->
+                            {% endif %}
+                            <a href="{% url 'penalty_delete' penalty.pk %}" 
+                            class="btn btn-outline-danger"
+                            data-bs-toggle="tooltip" data-bs-title="Видалити">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Пагінація -->
+        {% if penalties.paginator.num_pages > 1 %}
+        <nav aria-label="Навігація по сторінкам" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if penalties.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Перша">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ penalties.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Попередня">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in penalties.paginator.page_range %}
+                    {% if penalties.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > penalties.number|add:'-3' and num < penalties.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if penalties.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ penalties.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Наступна">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ penalties.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Остання">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <p class="text-center text-muted">Штрафних балів не знайдено.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Модальне вікно для деталей штрафу -->
+<div class="modal fade" id="penaltyDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Деталі штрафного балу</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="penaltyDetailsContent">
+                <!-- Контент буде завантажено через AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showPenaltyDetails(penaltyId) {
+    fetch(`/penalties/${penaltyId}/details/`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('penaltyDetailsContent').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('penaltyDetailsModal')).show();
+        });
+}
+
+// Ініціалізація tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

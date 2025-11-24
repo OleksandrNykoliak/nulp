@@ -517,3 +517,194 @@ def combined_student_list(request):
         'show_archived': True
     }
     return render(request, 'students/student_list.html', context)
+
+
+
+
+
+from .models import Penalty
+from .forms import PenaltyForm, PenaltySearchForm, PenaltyCancellationForm
+from django.db.models import Q, Sum
+
+@login_required
+def penalty_list(request):
+    form = PenaltySearchForm(request.GET or None)
+    penalties = Penalty.objects.all().select_related('student', 'created_by')
+    
+    if form.is_valid():
+        student_search = form.cleaned_data.get('student_search')
+        dormitory = form.cleaned_data.get('dormitory')
+        status = form.cleaned_data.get('status')
+        severity = form.cleaned_data.get('severity')
+        date_from = form.cleaned_data.get('date_from')
+        date_to = form.cleaned_data.get('date_to')
+        
+        if student_search:
+            penalties = penalties.filter(
+                Q(student__full_name__icontains=student_search)
+            )
+        
+        if dormitory:
+            penalties = penalties.filter(student__dormitory_number=dormitory)
+            
+        if status == 'active':
+            penalties = penalties.filter(status='active')
+            
+        if severity:
+            penalties = penalties.filter(severity=severity)
+            
+        if date_from:
+            penalties = penalties.filter(penalty_date__gte=date_from)
+            
+        if date_to:
+            penalties = penalties.filter(penalty_date__lte=date_to)
+    
+    # Сортування за датою порушення (новіші першими)
+    penalties = penalties.order_by('-penalty_date', '-created_at')
+    
+    paginator = Paginator(penalties, 50)
+    page = request.GET.get('page')
+    
+    try:
+        penalties_page = paginator.page(page)
+    except PageNotAnInteger:
+        penalties_page = paginator.page(1)
+    except EmptyPage:
+        penalties_page = paginator.page(paginator.num_pages)
+    
+    context = {
+        'penalties': penalties_page,
+        'form': form,
+        'active_tab': 'penalties'
+    }
+    return render(request, 'students/penalty_list.html', context)
+
+@login_required
+def penalty_create(request):
+    if request.method == 'POST':
+        form = PenaltyForm(request.POST)
+        if form.is_valid():
+            penalty = form.save(commit=False)
+            penalty.created_by = request.user
+            penalty.save()
+            messages.success(request, f'Штрафний бал успішно додано для {penalty.student.full_name}')
+            return redirect('penalty_list')
+    else:
+        form = PenaltyForm()
+    
+    context = {
+        'form': form,
+        'title': 'Додати штрафний бал'
+    }
+    return render(request, 'students/penalty_form.html', context)
+
+@login_required
+def penalty_create_for_student(request, student_id):
+    student = get_object_or_404(Student, pk=student_id)
+    
+    if request.method == 'POST':
+        form = PenaltyForm(request.POST)
+        if form.is_valid():
+            penalty = form.save(commit=False)
+            penalty.created_by = request.user
+            penalty.save()
+            messages.success(request, f'Штрафний бал успішно додано для {student.full_name}')
+            return redirect('student_update', pk=student.pk)
+    else:
+        form = PenaltyForm(initial={'student': student})
+    
+    context = {
+        'form': form,
+        'student': student,
+        'title': f'Додати штрафний бал для {student.full_name}'
+    }
+    return render(request, 'students/penalty_form.html', context)
+
+@login_required
+def penalty_cancel(request, pk):
+    penalty = get_object_or_404(Penalty, pk=pk)
+    
+    if penalty.status != 'active':
+        messages.warning(request, 'Цей штрафний бал вже скасовано.')
+        return redirect('penalty_list')
+    
+    if request.method == 'POST':
+        form = PenaltyCancellationForm(request.POST, instance=penalty)
+        if form.is_valid():
+            penalty = form.save(commit=False)
+            penalty.status = 'cancelled'
+            penalty.cancelled_by = request.user
+            penalty.cancelled_at = timezone.now()
+            penalty.save()
+            
+            messages.success(request, f'Штрафний бал успішно скасовано для {penalty.student.full_name}')
+            return redirect('penalty_list')
+    else:
+        form = PenaltyCancellationForm(instance=penalty)
+    
+    context = {
+        'form': form,
+        'penalty': penalty,
+        'title': f'Скасувати штрафний бал для {penalty.student.full_name}'
+    }
+    return render(request, 'students/penalty_cancel.html', context)
+
+@login_required
+def students_with_penalties(request):
+    """Сторінка зі списком студентів, які мають штрафні бали"""
+    students_with_penalties = Student.objects.filter(
+        penalties__status='active'
+    ).annotate(
+        total_points=Sum('penalties__points')
+    ).filter(
+        total_points__gt=0
+    ).distinct().order_by('-total_points', 'full_name')
+    
+    # Форма пошуку
+    form = PenaltySearchForm(request.GET or None)
+    
+    if form.is_valid():
+        student_search = form.cleaned_data.get('student_search')
+        dormitory = form.cleaned_data.get('dormitory')
+        
+        if student_search:
+            students_with_penalties = students_with_penalties.filter(
+                full_name__icontains=student_search
+            )
+        
+        if dormitory:
+            students_with_penalties = students_with_penalties.filter(dormitory_number=dormitory)
+    
+    paginator = Paginator(students_with_penalties, 50)
+    page = request.GET.get('page')
+    
+    try:
+        students_page = paginator.page(page)
+    except PageNotAnInteger:
+        students_page = paginator.page(1)
+    except EmptyPage:
+        students_page = paginator.page(paginator.num_pages)
+    
+    context = {
+        'students': students_page,
+        'form': form,
+        'active_tab': 'students_with_penalties',
+        'title': 'Студенти з штрафними балами'
+    }
+    return render(request, 'students/students_with_penalties.html', context)
+
+
+@login_required
+def penalty_delete(request, pk):
+    penalty = get_object_or_404(Penalty, pk=pk)
+    
+    if request.method == 'POST':
+        student_name = penalty.student.full_name
+        penalty.delete()
+        messages.success(request, f'Штрафний бал для {student_name} успішно видалено')
+        return redirect('penalty_list')
+    
+    context = {
+        'penalty': penalty,
+    }
+    return render(request, 'students/penalty_delete.html', context)

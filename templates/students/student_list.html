@@ -2,6 +2,17 @@
 {% block title %}{% if show_archived %}Всі студенти{% else %}Список студентів{% endif %}{% endblock %}
 {% block content %}
 
+<li class="nav-item">
+    <a class="nav-link {% if active_tab == 'penalties' %}active{% endif %}" href="{% url 'penalty_list' %}">
+        <i class="fas fa-exclamation-triangle"></i> Система штрафних балів
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if active_tab == 'students_with_penalties' %}active{% endif %}" href="{% url 'students_with_penalties' %}">
+        <i class="fas fa-users"></i> Штрафники
+    </a>
+</li>
+
 <div style="text-align: right; margin-right:20px; margin-bottom: 20px;">
     <a href="{% url 'student_export' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" 
        class="btn btn-sm btn-success me-2">
