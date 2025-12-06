@@ -1,6 +1,6 @@
-# views.py
 from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Q
+from django.db.models import Q, Sum, Subquery, OuterRef, Prefetch
+from django.db.models.functions import Coalesce
 from .models import Student, StudentArchive
 from .forms import StudentForm, StudentSearchForm
 from django.contrib.auth.decorators import login_required
@@ -16,7 +16,6 @@ import openpyxl
 from openpyxl.styles import Font, Alignment
 from django.http import HttpResponse
 from django.utils import timezone
-
 
 @login_required
 def student_list(request):
@@ -531,14 +530,30 @@ from django.db.models import Q, Sum
 from django.db.models import Q, Sum, Subquery, OuterRef
 from django.db.models.functions import Coalesce
 
+from django.db.models import Prefetch
+
 @login_required
 def penalty_list(request):
     form = PenaltySearchForm(request.GET or None)
     
-    # Спочатку створюємо базовий запит
-    penalties = Penalty.objects.all().select_related('student', 'created_by')
+    # Створюємо оптимізований запит з prefetch
+    penalties = Penalty.objects.all().select_related('student', 'created_by').prefetch_related(
+        Prefetch(
+            'student__penalties',
+            queryset=Penalty.objects.filter(status='active'),
+            to_attr='active_penalties_cache'
+        ),
+        Prefetch(
+            'student__penalty_reductions',
+            to_attr='penalty_reductions_cache'
+        ),
+        Prefetch(
+            'reductions',
+            to_attr='penalty_reductions_for_this'
+        )
+    )
     
-    # Підзапит для отримання загальної суми активних штрафів кожного студента
+    # Підзапит для отримання загальної суми активних штрафів кожного студента (без відпрацювань)
     total_points_subquery = Penalty.objects.filter(
         student_id=OuterRef('student_id'),
         status='active'
@@ -546,7 +561,7 @@ def penalty_list(request):
         total=Sum('points')
     ).values('total')
     
-    # Додаємо анотацію з загальною сумою балів студента
+    # Додаємо анотацію з загальною сумою балів студента без відпрацювань
     penalties = penalties.annotate(
         student_total_points=Coalesce(Subquery(total_points_subquery), 0)
     )
@@ -584,11 +599,10 @@ def penalty_list(request):
         if institute:
             penalties = penalties.filter(student__institute=institute)
         
-        # ФІЛЬТР ЗА СУМОЮ БАЛІВ
+        # ФІЛЬТР ЗА СУМОЮ БАЛІВ (без відпрацювань)
         if min_points:
             try:
                 min_points_int = int(min_points)
-                # Фільтруємо штрафи студентів, у яких загальна сума більше min_points
                 penalties = penalties.filter(student_total_points__gt=min_points_int)
             except ValueError:
                 pass
@@ -596,18 +610,7 @@ def penalty_list(request):
     # Сортування спочатку за загальною сумою балів (більші першими), потім за датою
     penalties = penalties.order_by('-student_total_points', '-penalty_date', '-created_at')
     
-    # Підготовка даних для відображення
-    # Обчислюємо загальну суму балів для кожного студента
-    for penalty in penalties:
-        # Якщо student_total_points вже анотовано, використовуємо його
-        if hasattr(penalty, 'student_total_points'):
-            penalty.student_total = penalty.student_total_points
-        else:
-            # Інакше обчислюємо
-            penalty.student_total = penalty.student.penalties.filter(
-                status='active'
-            ).aggregate(total=Sum('points'))['total'] or 0
-    
+    # Пагінація
     paginator = Paginator(penalties, 50)
     page = request.GET.get('page')
     
@@ -617,6 +620,21 @@ def penalty_list(request):
         penalties_page = paginator.page(1)
     except EmptyPage:
         penalties_page = paginator.page(paginator.num_pages)
+    
+    # Обчислюємо загальну суму балів для кожного студента З урахуванням відпрацювань
+    for penalty in penalties_page:
+        # Для відображення використовуємо властивість, яка враховує відпрацювання
+        penalty.display_total = penalty.student.total_penalty_points_with_reductions
+        
+        # Обчислюємо відпрацювання для цього конкретного штрафу
+        if hasattr(penalty, 'penalty_reductions_for_this'):
+            # Використовуємо кешовані дані
+            penalty.total_reductions_for_this_penalty = sum(
+                r.points_reduced for r in penalty.penalty_reductions_for_this
+            )
+        else:
+            # Якщо немає кешу, обчислюємо через aggregate
+            penalty.total_reductions_for_this_penalty = penalty.reduced_points
     
     context = {
         'penalties': penalties_page,
@@ -754,3 +772,154 @@ def penalty_delete(request, pk):
         'penalty': penalty,
     }
     return render(request, 'students/penalty_delete.html', context)
+
+
+
+
+from .models import PenaltyReduction
+from .forms import PenaltyReductionForm
+
+@login_required
+def penalty_reduction_create(request, student_id=None, penalty_id=None):
+    """Створення відпрацювання для студента або конкретного штрафу"""
+    student = None
+    penalty = None
+    
+    if student_id:
+        student = get_object_or_404(Student, pk=student_id)
+    
+    if penalty_id:
+        penalty = get_object_or_404(Penalty, pk=penalty_id)
+        student = penalty.student  # Студент береться зі штрафу
+    
+    if request.method == 'POST':
+        form = PenaltyReductionForm(request.POST, student_id=student.id if student else None)
+        if form.is_valid():
+            reduction = form.save(commit=False)
+            reduction.created_by = request.user
+            
+            # Якщо передано penalty_id, автоматично встановлюємо зв'язок
+            if penalty:
+                reduction.penalty = penalty
+            
+            reduction.save()
+            
+            messages.success(request, 
+                f'Відпрацювання {reduction.points_reduced} балів успішно зараховано для {reduction.student.full_name}'
+            )
+            
+            # Повертаємося на ту сторінку, звідки прийшли
+            if penalty_id:
+                return redirect('penalty_list')
+            elif student_id:
+                return redirect('student_update', pk=student_id)
+            else:
+                return redirect('penalty_list')
+    else:
+        initial_data = {}
+        if student:
+            initial_data['student'] = student
+        if penalty:
+            initial_data['penalty'] = penalty
+            
+        form = PenaltyReductionForm(initial=initial_data, student_id=student.id if student else None)
+    
+    # Обчислюємо доступні для списання бали
+    available_points = 0
+    if student:
+        total_penalties = student.penalties.filter(status='active').aggregate(
+            total=Sum('points')
+        )['total'] or 0
+        
+        total_reductions = student.penalty_reductions.aggregate(
+            total=Sum('points_reduced')
+        )['total'] or 0
+        
+        available_points = max(0, total_penalties - total_reductions)
+    
+    context = {
+        'form': form,
+        'student': student,
+        'penalty': penalty,
+        'available_points': available_points,
+        'title': 'Додати відпрацювання штрафних балів'
+    }
+    return render(request, 'students/penalty_reduction_form.html', context)
+from django import forms
+
+@login_required
+def penalty_reduction_list(request):
+    """Список всіх відпрацювань"""
+    reductions = PenaltyReduction.objects.all().select_related(
+        'student', 'penalty', 'created_by'
+    ).order_by('-reduction_date', '-created_at')
+    
+    # Форма фільтрації
+    class ReductionSearchForm(forms.Form):
+        student_search = forms.CharField(
+            required=False, 
+            label='Пошук студента',
+            widget=forms.TextInput(attrs={'placeholder': 'ПІБ студента'})
+        )
+        date_from = forms.DateField(
+            required=False,
+            label='Дата від',
+            widget=forms.DateInput(attrs={'type': 'date'})
+        )
+        date_to = forms.DateField(
+            required=False,
+            label='Дата до',
+            widget=forms.DateInput(attrs={'type': 'date'})
+        )
+    
+    form = ReductionSearchForm(request.GET or None)
+    
+    if form.is_valid():
+        student_search = form.cleaned_data.get('student_search')
+        date_from = form.cleaned_data.get('date_from')
+        date_to = form.cleaned_data.get('date_to')
+        
+        if student_search:
+            reductions = reductions.filter(
+                Q(student__full_name__icontains=student_search)
+            )
+        
+        if date_from:
+            reductions = reductions.filter(reduction_date__gte=date_from)
+        
+        if date_to:
+            reductions = reductions.filter(reduction_date__lte=date_to)
+    
+    paginator = Paginator(reductions, 50)
+    page = request.GET.get('page')
+    
+    try:
+        reductions_page = paginator.page(page)
+    except PageNotAnInteger:
+        reductions_page = paginator.page(1)
+    except EmptyPage:
+        reductions_page = paginator.page(paginator.num_pages)
+    
+    context = {
+        'reductions': reductions_page,
+        'form': form,
+        'title': 'Відпрацювання штрафних балів'
+    }
+    return render(request, 'students/penalty_reduction_list.html', context)
+
+@login_required
+def penalty_reduction_delete(request, pk):
+    """Видалення відпрацювання"""
+    reduction = get_object_or_404(PenaltyReduction, pk=pk)
+    
+    if request.method == 'POST':
+        student_name = reduction.student.full_name
+        points = reduction.points_reduced
+        reduction.delete()
+        messages.warning(request, f'Відпрацювання {points} балів для {student_name} успішно видалено')
+        return redirect('penalty_reduction_list')
+    
+    context = {
+        'reduction': reduction,
+    }
+    return render(request, 'students/penalty_reduction_delete.html', context)

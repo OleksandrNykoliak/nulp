@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4>{{ title }}</h4>
+    <a href="{% url 'penalty_reduction_list' %}" class="btn btn-outline-secondary">
+        Список відпрацювань
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if available_points and student %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> 
+            У студента <strong>{{ student.full_name }}</strong> доступно для списання: 
+            <span class="badge bg-warning">{{ available_points }} балів</span>
+        </div>
+        {% endif %}
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.student.id_for_label }}" class="form-label">Студент</label>
+                        {{ form.student }}
+                        {% if form.student.errors %}
+                        <div class="text-danger">
+                            {% for error in form.student.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.penalty.id_for_label }}" class="form-label">Штраф (необов'язково)</label>
+                        {{ form.penalty }}
+                        <small class="text-muted">Залиште порожнім для загального списання</small>
+                        {% if form.penalty.errors %}
+                        <div class="text-danger">
+                            {% for error in form.penalty.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.points_reduced.id_for_label }}" class="form-label">Кількість списаних балів</label>
+                        {{ form.points_reduced }}
+                        {% if form.points_reduced.errors %}
+                        <div class="text-danger">
+                            {% for error in form.points_reduced.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.reduction_date.id_for_label }}" class="form-label">Дата відпрацювання</label>
+                        {{ form.reduction_date }}
+                        {% if form.reduction_date.errors %}
+                        <div class="text-danger">
+                            {% for error in form.reduction_date.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.reason.id_for_label }}" class="form-label">Причина списання</label>
+                {{ form.reason }}
+                {% if form.reason.errors %}
+                <div class="text-danger">
+                    {% for error in form.reason.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.work_details.id_for_label }}" class="form-label">Опис відпрацювання</label>
+                {{ form.work_details }}
+                {% if form.work_details.errors %}
+                <div class="text-danger">
+                    {% for error in form.work_details.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.notes.id_for_label }}" class="form-label">Додаткові примітки</label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                <div class="text-danger">
+                    {% for error in form.notes.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check"></i> Записати відпрацювання
+                </button>
+                <a href="{% if penalty %}{% url 'penalty_list' %}{% elif student %}{% url 'student_update' pk=student.pk %}{% else %}{% url 'penalty_list' %}{% endif %}" 
+                   class="btn btn-outline-secondary">
+                    Скасувати
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

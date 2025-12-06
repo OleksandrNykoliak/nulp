@@ -21,8 +21,15 @@ urlpatterns = [
     path('all/', views.combined_student_list, name='combined_student_list'),
     path('penalties/', views.penalty_list, name='penalty_list'),
     path('penalties/new/', views.penalty_create, name='penalty_create'),
+    path('penalties/<int:pk>/delete/', views.penalty_delete, name='penalty_delete'),
+    path('penalty-reductions/', views.penalty_reduction_list, name='penalty_reduction_list'),
+    path('penalty-reductions/create/student/<int:student_id>/', views.penalty_reduction_create, name='penalty_reduction_create_for_student'),
+    path('penalty-reductions/create/penalty/<int:penalty_id>/', views.penalty_reduction_create, name='penalty_reduction_create_for_penalty'),
+    
+    path('penalty-reductions/create/', views.penalty_reduction_create, name='penalty_reduction_create'),
+    path('penalty-reductions/delete/<int:pk>/', views.penalty_reduction_delete, name='penalty_reduction_delete'),
     path('penalties/student/<int:student_id>/new/', views.penalty_create_for_student, name='penalty_create_for_student'),
     path('penalties/<int:pk>/cancel/', views.penalty_cancel, name='penalty_cancel'),
     path('students-with-penalties/', views.students_with_penalties, name='students_with_penalties'),
-    path('penalties/<int:pk>/delete/', views.penalty_delete, name='penalty_delete'),
+    
 ]

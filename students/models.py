@@ -142,6 +142,19 @@ class Student(models.Model):
     history = HistoricalRecords()
     
     @property
+    def total_penalty_points_with_reductions(self):
+        """Загальна сума штрафних балів з урахуванням відпрацювань"""
+        total_penalties = self.penalties.filter(status='active').aggregate(
+            total=Sum('points')
+        )['total'] or 0
+        
+        total_reductions = self.penalty_reductions.aggregate(
+            total=Sum('points_reduced')
+        )['total'] or 0
+        
+        return max(0, total_penalties - total_reductions)
+    
+    @property
     def dormitory_address(self):
         return self.DORMITORY_ADDRESSES.get(self.dormitory_number, "___")
 
@@ -260,7 +273,8 @@ class StudentArchive(models.Model):
     @property
     def has_penalties(self):
         return self.penalties.filter(status='active').exists()
-        
+from django.db.models import Case, When, Sum, F, ExpressionWrapper
+   
         
 class Penalty(models.Model):
     SEVERITY_CHOICES = [
@@ -295,6 +309,32 @@ class Penalty(models.Model):
     def __str__(self):
         return f"{self.student.full_name} - {self.points} бал(ів) - {self.get_severity_display()}"
     
+        # Додайте ці властивості до моделі Penalty
+    @property
+    def reduced_points(self):
+        """Загальна кількість відпрацьованих балів для цього штрафу"""
+        return self.reductions.aggregate(total=Sum('points_reduced'))['total'] or 0
+    
+    # @property
+    # def remaining_points(self):
+    #     """Залишок балів після відпрацювання"""
+    #     return max(0, self.points - self.reduced_points)
+    
+    @property
+    def total_reductions(self):
+        """Загальна кількість списаних балів для цього штрафу"""
+        return self.reductions.aggregate(total=Sum('points_reduced'))['total'] or 0
+    
+    @property
+    def remaining_points(self):
+        """Залишок балів після відпрацювання"""
+        return max(0, self.points - self.total_reductions)
+    
+    @property
+    def is_fully_reduced(self):
+        """Чи повністю відпрацьований штраф"""
+        return self.remaining_points == 0
+    
     @property
     def is_active(self):
         return self.status == 'active'
@@ -305,3 +345,60 @@ class Penalty(models.Model):
         ordering = ['-penalty_date', '-created_at']
 
 # Додайте властивість до моделі Student для підрахунку загальних штрафних балів
+
+
+# Додайте після моделі Penalty
+class PenaltyReduction(models.Model):
+    """Модель для відпрацювання штрафних балів"""
+    student = models.ForeignKey(
+        Student, 
+        on_delete=models.CASCADE, 
+        verbose_name="Студент", 
+        related_name='penalty_reductions'
+    )
+    penalty = models.ForeignKey(
+        Penalty, 
+        on_delete=models.CASCADE, 
+        verbose_name="Штраф",
+        related_name='reductions',
+        null=True, 
+        blank=True
+    )
+    points_reduced = models.PositiveIntegerField(
+        verbose_name="Кількість списаних балів",
+        default=1
+    )
+    reason = models.TextField(
+        verbose_name="Причина відпрацювання/списання"
+    )
+    work_details = models.TextField(
+        verbose_name="Опис відпрацювання",
+        help_text="Як саме студент відпрацював порушення"
+    )
+    reduction_date = models.DateField(
+        default=timezone.now,
+        verbose_name="Дата відпрацювання"
+    )
+    created_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        verbose_name="Ким зараховано"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата створення"
+    )
+    notes = models.TextField(
+        blank=True, 
+        null=True, 
+        verbose_name="Додаткові примітки"
+    )
+    
+    def __str__(self):
+        return f"Відпрацювання {self.points_reduced} балів для {self.student.full_name}"
+    
+    class Meta:
+        verbose_name = "Відпрацювання штрафу"
+        verbose_name_plural = "Відпрацювання штрафів"
+        ordering = ['-reduction_date', '-created_at']

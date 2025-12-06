@@ -194,3 +194,39 @@ class PenaltyCancellationForm(forms.ModelForm):
         labels = {
             'cancellation_reason': 'Причина скасування',
         }
+        
+from .models import PenaltyReduction 
+# Додайте після PenaltyCancellationForm
+class PenaltyReductionForm(forms.ModelForm):
+    class Meta:
+        model = PenaltyReduction
+        fields = ['student', 'penalty', 'points_reduced', 'reason', 'work_details', 'reduction_date', 'notes']
+        widgets = {
+            'reason': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Причина списання балів...'}),
+            'work_details': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Опишіть, як студент відпрацював порушення...'}),
+            'notes': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Додаткові примітки...'}),
+            'reduction_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+        labels = {
+            'points_reduced': 'Кількість списаних балів',
+            'reason': 'Причина списання',
+            'work_details': 'Опис відпрацювання',
+            'reduction_date': 'Дата відпрацювання',
+            'notes': 'Додаткові примітки',
+        }
+    
+    def __init__(self, *args, **kwargs):
+        student_id = kwargs.pop('student_id', None)
+        super().__init__(*args, **kwargs)
+        
+        if student_id:
+            # Фільтруємо студента
+            self.fields['student'].queryset = Student.objects.filter(id=student_id)
+            self.fields['student'].initial = student_id
+            self.fields['student'].disabled = True
+            
+            # Фільтруємо тільки активні штрафи цього студента
+            self.fields['penalty'].queryset = Penalty.objects.filter(
+                student_id=student_id, 
+                status='active'
+            )

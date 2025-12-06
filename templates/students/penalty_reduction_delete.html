@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Видалити відпрацювання{% endblock %}
+{% block content %}
+
+<div class="card">
+    <div class="card-header bg-danger text-white">
+        <h5 class="card-title mb-0">Видалення відпрацювання</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Увага!</strong> Ви збираєтеся видалити відпрацювання.
+        </div>
+        
+        <div class="mb-4">
+            <h6>Деталі відпрацювання:</h6>
+            <ul>
+                <li><strong>Студент:</strong> {{ reduction.student.full_name }}</li>
+                <li><strong>Балів списано:</strong> {{ reduction.points_reduced }}</li>
+                <li><strong>Причина:</strong> {{ reduction.reason|truncatewords:20 }}</li>
+                <li><strong>Дата відпрацювання:</strong> {{ reduction.reduction_date|date:"d.m.Y" }}</li>
+                <li><strong>Створено:</strong> {{ reduction.created_by.username|default:"-" }}, {{ reduction.created_at|date:"d.m.Y H:i" }}</li>
+            </ul>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="mt-4">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Видалити відпрацювання
+                </button>
+                <a href="{% url 'penalty_reduction_list' %}" class="btn btn-outline-secondary">
+                    Скасувати
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

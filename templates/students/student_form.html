@@ -83,37 +83,33 @@
     }
 
     .table {
-    background-color: white;
-    border-radius: 8px;
-    overflow: hidden;
-}
+        background-color: white;
+        border-radius: 8px;
+        overflow: hidden;
+    }
 
-.table th {
-    font-weight: 600;
-    text-align: center;
-    background-color: #f8f9fa;
-}
+    .table th {
+        font-weight: 600;
+        text-align: center;
+        background-color: #f8f9fa;
+    }
 
-.table td {
-    font-size: 14px;
-    vertical-align: top;
-}
+    .table td {
+        font-size: 14px;
+        vertical-align: top;
+    }
 
-ul {
-    margin: 0;
-    padding: 0;
-    list-style-type: none;
-}
-
+    ul {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="full-width-container">
     <div class="card">
-        <!-- <div class="card-header">
-            <h4 class="mb-0 text-dark"><i class="bi bi-person-plus me-2"></i>{% if form.instance.pk %}Редагування{% else %}{% endif %} студента</h4>
-        </div> -->
         <div class="card-body p-4">
             <form method="post" accept-charset="utf-8">
                 {% csrf_token %}
@@ -332,79 +328,81 @@ ul {
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check-lg me-2"></i>Зберегти
                         </button>
-                        {% if student and history %}
-<div class="form-section mt-5">
-    <h5 class="section-header"><i class="bi bi-clock-history me-2"></i>Історія змін</h5>
-    <div class="table-responsive">
-        <table class="table table-sm table-striped table-bordered align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Дата</th>
-                    <th>Користувач</th>
-                    <th>Тип зміни</th>
-                    <th>Деталі змін</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for record in history %}
-                <tr>
-                    <td>{{ record.history_date|date:"d.m.Y H:i" }}</td>
-                    <td>
-                        {% if record.history_user %}
-                            {{ record.history_user.username }}
-                        {% else %}
-                            <span class="text-muted">—</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if record.history_type == '+' %}
-                            <span class="text-success">➕ Створення</span>
-                        {% elif record.history_type == '~' %}
-                            <span class="text-primary">✏️ Редагування</span>
-                        {% elif record.history_type == '-' %}
-                            <span class="text-danger">❌ Видалення</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% for d in diffs %}
-                            {% if d.date == record.history_date %}
-                                <ul style="margin: 0; padding-left: 15px;">
-                                    {% for change in d.changes %}
-                                        <li>
-                                            <strong>{{ change.field }}</strong>: 
-                                            <span class="text-danger">{{ change.old }}</span> → 
-                                            <span class="text-success">{{ change.new }}</span>
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
-                        {% endfor %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-{% endif %}
-
                     </div>
                 </div>
             </form>
-        </div>
-    </div>
-</div>
 
-{% if student %}
+            {% if student and history %}
+            <div class="form-section mt-5">
+                <h5 class="section-header"><i class="bi bi-clock-history me-2"></i>Історія змін</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Дата</th>
+                                <th>Користувач</th>
+                                <th>Тип зміни</th>
+                                <th>Деталі змін</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in history %}
+                            <tr>
+                                <td>{{ record.history_date|date:"d.m.Y H:i" }}</td>
+                                <td>
+                                    {% if record.history_user %}
+                                        {{ record.history_user.username }}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if record.history_type == '+' %}
+                                        <span class="text-success">➕ Створення</span>
+                                    {% elif record.history_type == '~' %}
+                                        <span class="text-primary">✏️ Редагування</span>
+                                    {% elif record.history_type == '-' %}
+                                        <span class="text-danger">❌ Видалення</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% for d in diffs %}
+                                        {% if d.date == record.history_date %}
+                                            <ul style="margin: 0; padding-left: 15px;">
+                                                {% for change in d.changes %}
+                                                    <li>
+                                                        <strong>{{ change.field }}</strong>: 
+                                                        <span class="text-danger">{{ change.old }}</span> → 
+                                                        <span class="text-success">{{ change.new }}</span>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+           {% if student %}
 <!-- Секція штрафних балів -->
 <div class="form-section mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="section-header"><i class="bi bi-exclamation-triangle me-2"></i>Штрафні бали</h5>
         <div>
-            {% if student.total_penalty_points > 0 %}
-                <span class="badge {% if student.total_penalty_points >= 5 %}bg-danger{% elif student.total_penalty_points >= 3 %}bg-warning{% else %}bg-info{% endif %} me-2">
-                    Загальна сума: {{ student.total_penalty_points }} бал(ів)
+            {% if student.total_penalty_points_with_reductions > 0 %}
+                <span class="badge {% if student.total_penalty_points_with_reductions >= 5 %}bg-danger{% elif student.total_penalty_points_with_reductions >= 3 %}bg-warning{% else %}bg-info{% endif %} me-2">
+                    Загальна сума: {{ student.total_penalty_points_with_reductions }} бал(ів)
                 </span>
+                {% if student.total_penalty_points > student.total_penalty_points_with_reductions %}
+                    <small class="text-muted">
+                        (з них відпрацьовано: {{ student.total_penalty_points|add:"-"|add:student.total_penalty_points_with_reductions }})
+                    </small>
+                {% endif %}
             {% endif %}
             <a href="{% url 'penalty_create_for_student' student.pk %}" class="btn btn-sm btn-warning">
                 <i class="bi bi-plus-circle me-1"></i>Додати штраф
@@ -422,6 +420,7 @@ ul {
                     <th>Рівень</th>
                     <th>Причина</th>
                     <th>Ким видано</th>
+                    <th>Відпрацьовано</th>
                     <th>Дії</th>
                 </tr>
             </thead>
@@ -445,31 +444,76 @@ ul {
                     </td>
                     <td>{{ penalty.reason }}</td>
                     <td>{{ penalty.created_by.username|default:"-" }}</td>
-<td>
-    <div class="btn-group btn-group-sm">
-        <!-- <a href="{% url 'penalty_cancel' penalty.pk %}" class="btn btn-sm btn-outline-warning">
-            Скасувати
-        </a> -->
-        <a href="{% url 'penalty_delete' penalty.pk %}" class="btn btn-sm btn-outline-danger">
-            Видалити
-        </a>
-    </div>
-</td>
+                    <td>
+                        {% if penalty.reduced_points > 0 %}
+                            <span class="badge bg-success">
+                                -{{ penalty.reduced_points }}
+                            </span>
+                            <br>
+                            <small class="text-muted">Залишок: {{ penalty.remaining_points }}</small>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'penalty_delete' penalty.pk %}" class="btn btn-sm btn-outline-danger">
+                                Видалити
+                            </a>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
     {% else %}
-    <p class="text-muted text-center mb-0">Штрафних балів немає</p>
+    <p class="text-muted text-center mb-0">___________________________</p>
+    {% endif %}
+    
+    {% if student.penalty_reductions.exists %}
+    <div class="mt-4">
+        <h6 class="section-header"><i class="bi bi-check-circle me-2"></i>Відпрацювання</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Балів списано</th>
+                        <th>Причина</th>
+                        <th>Опис відпрацювання</th>
+                        <th>Ким зараховано</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reduction in student.penalty_reductions.all|slice:":5" %}
+                    <tr>
+                        <td>{{ reduction.reduction_date|date:"d.m.Y" }}</td>
+                        <td><span class="badge bg-success">{{ reduction.points_reduced }}</span></td>
+                        <td>{{ reduction.reason|truncatewords:5 }}</td>
+                        <td>{{ reduction.work_details|truncatewords:10 }}</td>
+                        <td>{{ reduction.created_by.username|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if student.penalty_reductions.count > 5 %}
+        <div class="text-center mt-2">
+            <a href="{% url 'penalty_reduction_list' %}?student_search={{ student.full_name }}" 
+               class="btn btn-sm btn-outline-secondary">
+                Показати всі відпрацювання ({{ student.penalty_reductions.count }})
+            </a>
+        </div>
+        {% endif %}
+    </div>
     {% endif %}
 </div>
 {% endif %}
-
+        </div>
+    </div>
+</div>
 {% endblock %}
-
-
-
 
 {% block extra_js %}
 <script>
