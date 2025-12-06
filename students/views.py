@@ -526,10 +526,30 @@ from .models import Penalty
 from .forms import PenaltyForm, PenaltySearchForm, PenaltyCancellationForm
 from django.db.models import Q, Sum
 
+from django.db.models import Q, Sum
+
+from django.db.models import Q, Sum, Subquery, OuterRef
+from django.db.models.functions import Coalesce
+
 @login_required
 def penalty_list(request):
     form = PenaltySearchForm(request.GET or None)
+    
+    # Спочатку створюємо базовий запит
     penalties = Penalty.objects.all().select_related('student', 'created_by')
+    
+    # Підзапит для отримання загальної суми активних штрафів кожного студента
+    total_points_subquery = Penalty.objects.filter(
+        student_id=OuterRef('student_id'),
+        status='active'
+    ).values('student_id').annotate(
+        total=Sum('points')
+    ).values('total')
+    
+    # Додаємо анотацію з загальною сумою балів студента
+    penalties = penalties.annotate(
+        student_total_points=Coalesce(Subquery(total_points_subquery), 0)
+    )
     
     if form.is_valid():
         student_search = form.cleaned_data.get('student_search')
@@ -538,6 +558,8 @@ def penalty_list(request):
         severity = form.cleaned_data.get('severity')
         date_from = form.cleaned_data.get('date_from')
         date_to = form.cleaned_data.get('date_to')
+        institute = form.cleaned_data.get('institute')
+        min_points = form.cleaned_data.get('min_points')
         
         if student_search:
             penalties = penalties.filter(
@@ -558,9 +580,33 @@ def penalty_list(request):
             
         if date_to:
             penalties = penalties.filter(penalty_date__lte=date_to)
+        
+        if institute:
+            penalties = penalties.filter(student__institute=institute)
+        
+        # ФІЛЬТР ЗА СУМОЮ БАЛІВ
+        if min_points:
+            try:
+                min_points_int = int(min_points)
+                # Фільтруємо штрафи студентів, у яких загальна сума більше min_points
+                penalties = penalties.filter(student_total_points__gt=min_points_int)
+            except ValueError:
+                pass
     
-    # Сортування за датою порушення (новіші першими)
-    penalties = penalties.order_by('-penalty_date', '-created_at')
+    # Сортування спочатку за загальною сумою балів (більші першими), потім за датою
+    penalties = penalties.order_by('-student_total_points', '-penalty_date', '-created_at')
+    
+    # Підготовка даних для відображення
+    # Обчислюємо загальну суму балів для кожного студента
+    for penalty in penalties:
+        # Якщо student_total_points вже анотовано, використовуємо його
+        if hasattr(penalty, 'student_total_points'):
+            penalty.student_total = penalty.student_total_points
+        else:
+            # Інакше обчислюємо
+            penalty.student_total = penalty.student.penalties.filter(
+                status='active'
+            ).aggregate(total=Sum('points'))['total'] or 0
     
     paginator = Paginator(penalties, 50)
     page = request.GET.get('page')

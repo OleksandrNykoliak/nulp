@@ -4,16 +4,15 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4>Система штрафних балів</h4>
+    
     <div>
-        <a href="{% url 'students_with_penalties' %}" class="btn btn-info me-2">
-            <i class="fas fa-users"></i> Студенти з штрафами
-        </a>
         <a href="{% url 'penalty_create' %}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Додати штраф
         </a>
     </div>
 </div>
 
+<!-- Форма фільтрації -->
 <!-- Форма фільтрації -->
 <div class="card mb-4">
     <div class="card-header">
@@ -40,6 +39,19 @@
                 </select>
             </div>
             <div class="col-md-2">
+                <label for="institute" class="form-label">ННІ</label>
+                <select name="institute" id="institute" class="form-select">
+                    <option value="">---------</option>
+                    {% for value, label in form.fields.institute.choices %}
+                        {% if value %}
+                        <option value="{{ value }}" {% if request.GET.institute == value|stringformat:"s" %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
                 <label for="status" class="form-label">Статус</label>
                 <select name="status" id="status" class="form-select">
                     <option value="">---------</option>
@@ -57,6 +69,17 @@
                             {{ label }}
                         </option>
                         {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="min_points" class="form-label">Мін. сума балів</label>
+                <select name="min_points" id="min_points" class="form-select">
+                    <option value="">---------</option>
+                    {% for value, label in form.fields.min_points.choices %}
+                        <option value="{{ value }}" {% if request.GET.min_points == value|stringformat:"s" %}selected{% endif %}>
+                            {{ label }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>
@@ -98,58 +121,70 @@
                         <th>Дії</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for penalty in penalties %}
-                    <tr class="{% if not penalty.is_active %}table-secondary{% endif %}">
-                        <td>
-                            <a href="{% url 'student_update' penalty.student.pk %}">
-                                {{ penalty.student.full_name }}
-                            </a>
-                        </td>
-                        <td>{{ penalty.student.dormitory_number|default:"-" }}</td>
-                        <td>
-                            <span class="badge {% if penalty.points >= 3 %}bg-danger{% else %}bg-warning{% endif %}">
-                                {{ penalty.points }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge 
-                                {% if penalty.severity == 1 %}bg-secondary
-                                {% elif penalty.severity == 2 %}bg-info
-                                {% elif penalty.severity == 3 %}bg-warning
-                                {% else %}bg-danger{% endif %}">
-                                {{ penalty.get_severity_display }}
-                            </span>
-                        </td>
-                        <td>{{ penalty.reason|truncatewords:10 }}</td>
-                        <td>{{ penalty.penalty_date|date:"d.m.Y" }}</td>
-                        <td>
-                            {% if penalty.is_active %}
-                                <span class="badge bg-success">Активний</span>
-                            {% else %}
-                                <span class="badge bg-secondary">Скасований</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ penalty.created_by.username|default:"-" }}</td>
-                       <td>
-                        <div class="btn-group btn-group-sm">
-                            {% if penalty.is_active %}
-                            <!-- <a href="{% url 'penalty_cancel' penalty.pk %}" 
-                            class="btn btn-outline-warning"
-                            data-bs-toggle="tooltip" data-bs-title="Скасувати">
-                                <i class="fas fa-ban"></i>
-                            </a> -->
-                            {% endif %}
-                            <a href="{% url 'penalty_delete' penalty.pk %}" 
-                            class="btn btn-outline-danger"
-                            data-bs-toggle="tooltip" data-bs-title="Видалити">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                        </div>
-                    </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
+<tbody>
+    {% for penalty in penalties %}
+    <tr class="{% if not penalty.is_active %}table-secondary{% endif %}">
+        <td>
+            <a href="{% url 'student_update' penalty.student.pk %}">
+                {{ penalty.student.full_name }}
+            </a>
+            <br>
+            <small class="text-muted">
+                Всього: <span class="badge 
+                    {% if penalty.student_total >= 25 %}bg-danger
+                    {% elif penalty.student_total >= 20 %}bg-warning
+                    {% elif penalty.student_total >= 15 %}bg-info
+                    {% elif penalty.student_total >= 10 %}bg-primary
+                    {% elif penalty.student_total >= 5 %}bg-secondary
+                    {% else %}bg-light text-dark{% endif %}">
+                    {{ penalty.student_total }} балів
+                </span>
+            </small>
+        </td>
+        <td>{{ penalty.student.dormitory_number|default:"-" }}</td>
+        <td>
+            <span class="badge {% if penalty.points >= 3 %}bg-danger{% else %}bg-warning{% endif %}">
+                {{ penalty.points }}
+            </span>
+        </td>
+        <td>
+            <span class="badge 
+                {% if penalty.severity == 1 %}bg-secondary
+                {% elif penalty.severity == 2 %}bg-info
+                {% elif penalty.severity == 3 %}bg-warning
+                {% else %}bg-danger{% endif %}">
+                {{ penalty.get_severity_display }}
+            </span>
+        </td>
+        <td>{{ penalty.reason|truncatewords:10 }}</td>
+        <td>{{ penalty.penalty_date|date:"d.m.Y" }}</td>
+        <td>
+            {% if penalty.is_active %}
+                <span class="badge bg-success">Активний</span>
+            {% else %}
+                <span class="badge bg-secondary">Скасований</span>
+            {% endif %}
+        </td>
+        <td>{{ penalty.created_by.username|default:"-" }}</td>
+        <td>
+            <div class="btn-group btn-group-sm">
+                {% if penalty.is_active %}
+                <!-- <a href="{% url 'penalty_cancel' penalty.pk %}" 
+                class="btn btn-outline-warning"
+                data-bs-toggle="tooltip" data-bs-title="Скасувати">
+                    <i class="fas fa-ban"></i>
+                </a> -->
+                {% endif %}
+                <a href="{% url 'penalty_delete' penalty.pk %}" 
+                class="btn btn-outline-danger"
+                data-bs-toggle="tooltip" data-bs-title="Видалити">
+                    <i class="fas fa-trash"></i>
+                </a>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
             </table>
         </div>
 

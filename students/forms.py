@@ -165,6 +165,24 @@ class PenaltySearchForm(forms.Form):
         label='Дата до',
         widget=forms.DateInput(attrs={'type': 'date'})
     )
+    # НОВІ ПОЛЯ
+    institute = forms.ChoiceField(
+        choices=[('', '---------')] + Student.INSTITUTE_CHOICES,
+        required=False,
+        label='ННІ'
+    )
+    min_points = forms.ChoiceField(
+        choices=[
+    ('', '---------'),
+    ('5', '5'),
+    ('10', '10'),
+    ('15', '15'),
+    ('20', '20'),
+    ('25', '25'),
+        ],
+        required=False,
+        label='Мінімальна сума балів'
+    )
 
 class PenaltyCancellationForm(forms.ModelForm):
     class Meta:
