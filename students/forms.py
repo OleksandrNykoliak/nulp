@@ -172,14 +172,7 @@ class PenaltySearchForm(forms.Form):
         label='ННІ'
     )
     min_points = forms.ChoiceField(
-        choices=[
-    ('', '---------'),
-    ('5', '5'),
-    ('10', '10'),
-    ('15', '15'),
-    ('20', '20'),
-    ('25', '25'),
-        ],
+    choices=[('', '---------')] + [(str(i), str(i)) for i in range(1, 61)],
         required=False,
         label='Мінімальна сума балів'
     )
@@ -230,3 +223,97 @@ class PenaltyReductionForm(forms.ModelForm):
                 student_id=student_id, 
                 status='active'
             )
+            
+            
+from django import forms
+from django.utils import timezone
+from django.db.models import Sum, Q 
+from .models import Penalty, PenaltyReduction, Student
+
+class PenaltyAndReductionForm(forms.ModelForm):
+    OPERATION_CHOICES = [
+        ('penalty', 'Додати штраф'),
+        ('reduction', 'Списати бали'),
+    ]
+    
+    operation_type = forms.ChoiceField(
+        choices=OPERATION_CHOICES,
+        label='Тип операції *',
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
+    points = forms.IntegerField(
+        min_value=1,
+        label='Кількість балів *',
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    
+    date = forms.DateField(
+        label='Дата *',
+        initial=timezone.now,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+    )
+    
+    reason = forms.CharField(
+        label='Причина *',
+        widget=forms.Textarea(attrs={'rows': 3, 'class': 'form-control'})
+    )
+    
+    comment = forms.CharField(
+        required=False,
+        label='Коментар',
+        widget=forms.Textarea(attrs={'rows': 2, 'class': 'form-control'})
+    )
+    
+    work_details = forms.CharField(
+        required=False,
+        label='Опис відпрацювання',
+        widget=forms.Textarea(attrs={'rows': 3, 'class': 'form-control'})
+    )
+    
+    class Meta:
+        model = Penalty
+        fields = ['student', 'severity']
+        widgets = {
+            'student': forms.Select(attrs={'class': 'form-control'}),
+            'severity': forms.Select(attrs={'class': 'form-control'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        student_id = kwargs.pop('student_id', None)
+        super().__init__(*args, **kwargs)
+        
+        # Якщо передано student_id, обмежуємо вибір студента
+        if student_id:
+            self.fields['student'].queryset = Student.objects.filter(id=student_id)
+            self.fields['student'].initial = student_id
+            self.fields['student'].widget.attrs['disabled'] = True
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        operation_type = cleaned_data.get('operation_type')
+        points = cleaned_data.get('points')
+        student = cleaned_data.get('student')
+        severity = cleaned_data.get('severity')
+        
+        # Якщо обрано "Додати штраф", перевіряємо severity
+        if operation_type == 'penalty' and not severity:
+            self.add_error('severity', 'Це поле обов\'язкове для штрафу')
+        
+        # Якщо обрано "Списати бали", перевіряємо наявність балів у студента
+        if operation_type == 'reduction' and student:
+            # Обчислюємо доступні для списання бали
+            total_penalties = student.penalties.filter(status='active').aggregate(
+                total=Sum('points')
+            )['total'] or 0
+            
+            total_reductions = student.penalty_reductions.aggregate(
+                total=Sum('points_reduced')
+            )['total'] or 0
+            
+            available_points = max(0, total_penalties - total_reductions)
+            
+            if points > available_points:
+                self.add_error('points', f'Студент має лише {available_points} доступних балів для списання')
+        
+        return cleaned_data

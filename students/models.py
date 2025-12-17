@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 class Student(models.Model):
     INSTITUTE_CHOICES = [
@@ -160,6 +161,9 @@ class Student(models.Model):
 
     def __str__(self):
         return self.full_name
+    
+    def get_absolute_url(self):
+        return reverse('student_update', args=[str(self.id)])
     
     def save(self, *args, **kwargs):
         if not self.contract_number and self.dormitory_number:

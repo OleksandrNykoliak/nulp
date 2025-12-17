@@ -31,5 +31,6 @@ urlpatterns = [
     path('penalties/student/<int:student_id>/new/', views.penalty_create_for_student, name='penalty_create_for_student'),
     path('penalties/<int:pk>/cancel/', views.penalty_cancel, name='penalty_cancel'),
     path('students-with-penalties/', views.students_with_penalties, name='students_with_penalties'),
-    
+    path('get-student-points/<int:student_id>/', views.get_student_points, name='get_student_points'),
+
 ]

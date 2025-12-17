@@ -75,9 +75,9 @@ if DEBUG:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'campus_db',
-            'USER': 'campus_user',
-            'PASSWORD': '836219postgresHelloWorld!',
+            'NAME': 'postgres',
+            'USER': 'postgres',
+            'PASSWORD': 'postgres',
             'HOST': 'localhost',
             'PORT': '5432',
         }
