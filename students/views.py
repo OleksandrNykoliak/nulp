@@ -638,7 +638,6 @@ def penalty_list(request):
     return render(request, 'students/penalty_list.html', context)
 
 
-
 @login_required
 def penalty_create(request):
     if request.method == 'POST':
@@ -766,22 +765,98 @@ def penalty_create_for_student(request, student_id):
     student = get_object_or_404(Student, pk=student_id)
     
     if request.method == 'POST':
-        form = PenaltyForm(request.POST)
+        form = PenaltyAndReductionForm(request.POST, student_id=student_id)
         if form.is_valid():
-            penalty = form.save(commit=False)
-            penalty.created_by = request.user
-            penalty.save()
-            messages.success(request, f'Штрафний бал успішно додано для {student.full_name}')
+            operation_type = form.cleaned_data['operation_type']
+            points = form.cleaned_data['points']
+            reason = form.cleaned_data['reason']
+            comment = form.cleaned_data.get('comment', '')
+            date = form.cleaned_data['date']
+            
+            if operation_type == 'penalty':
+                # Додаємо штраф
+                severity = form.cleaned_data['severity']
+                penalty = Penalty(
+                    student=student,
+                    points=points,
+                    reason=reason,
+                    comment=comment,
+                    severity=severity,
+                    penalty_date=date,
+                    created_by=request.user,
+                    status='active'
+                )
+                penalty.save()
+                messages.success(request, f'Штрафний бал успішно додано для {student.full_name}')
+            
+            elif operation_type == 'reduction':
+                # Спочатку отримуємо всі активні штрафи студента
+                active_penalties = student.penalties.filter(status='active').order_by('penalty_date')
+                
+                # Обчислюємо загальну суму відпрацювань
+                total_reductions = student.penalty_reductions.aggregate(
+                    total=Sum('points_reduced')
+                )['total'] or 0
+                
+                total_penalties = student.penalties.filter(status='active').aggregate(
+                    total=Sum('points')
+                )['total'] or 0
+                
+                available_points = max(0, total_penalties - total_reductions)
+                
+                # Перевіряємо, чи є достатньо балів
+                if points > available_points:
+                    messages.error(request, f'Недостатньо балів для списання. Доступно: {available_points}')
+                    return redirect('student_update', pk=student.pk)
+                
+                # Списуємо бали з найстаріших штрафів
+                points_to_reduce = points
+                reductions_created = []
+                
+                for penalty in active_penalties:
+                    if points_to_reduce <= 0:
+                        break
+                    
+                    # Обчислюємо скільки балів можна списати з цього штрафу
+                    penalty_reductions = penalty.reductions.aggregate(
+                        total=Sum('points_reduced')
+                    )['total'] or 0
+                    penalty_available = penalty.points - penalty_reductions
+                    
+                    if penalty_available > 0:
+                        reduce_amount = min(points_to_reduce, penalty_available)
+                        
+                        # Створюємо відпрацювання
+                        reduction = PenaltyReduction(
+                            student=student,
+                            penalty=penalty,
+                            points_reduced=reduce_amount,
+                            reason=reason,
+                            work_details=form.cleaned_data.get('work_details', 'Відпрацювання'),
+                            reduction_date=date,
+                            created_by=request.user
+                        )
+                        reduction.save()
+                        reductions_created.append(reduction)
+                        
+                        points_to_reduce -= reduce_amount
+                
+                if points_to_reduce == 0:
+                    messages.success(request, f'Успішно списано {points} балів для {student.full_name}')
+                else:
+                    messages.warning(request, f'Списано {points - points_to_reduce} балів з {points} для {student.full_name}')
+            
             return redirect('student_update', pk=student.pk)
     else:
-        form = PenaltyForm(initial={'student': student})
+        form = PenaltyAndReductionForm(student_id=student_id)
     
     context = {
         'form': form,
         'student': student,
-        'title': f'Додати штрафний бал для {student.full_name}'
+        'title': f'Додати запис для {student.full_name}'
     }
     return render(request, 'students/penalty_form.html', context)
+
 
 @login_required
 def penalty_cancel(request, pk):
@@ -1022,3 +1097,8 @@ def penalty_reduction_delete(request, pk):
         'reduction': reduction,
     }
     return render(request, 'students/penalty_reduction_delete.html', context)
+
+
+
+
+

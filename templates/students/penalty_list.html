@@ -91,8 +91,10 @@
                         <th>Студент</th>
                         <th>Гуртожиток</th>
                         <th>Загальна сума штрафів</th>
+                        <th>Відпрацьовано</th>
+                        <th>Залишок</th>
                         <th>ННІ</th>
-                        <th>Кількість</th>
+                        <th>Кількість порушень</th>
                         <th>Дії</th>
                     </tr>
                 </thead>
@@ -110,6 +112,23 @@
                                 {{ student.total_penalty_points|default:0 }} балів
                             </span>
                         </td>
+                        <td>
+                            <span class="badge bg-success">
+                                {{ student.total_reduction_points|default:0 }} балів
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if student.remaining_points >= 25 %}bg-danger
+                                {% elif student.remaining_points >= 20 %}bg-warning
+                                {% elif student.remaining_points >= 15 %}bg-info
+                                {% elif student.remaining_points >= 10 %}bg-primary
+                                {% elif student.remaining_points >= 5 %}bg-secondary
+                                {% elif student.remaining_points > 0 %}bg-light text-dark
+                                {% else %}bg-success text-white{% endif %}">
+                                {{ student.remaining_points|default:0 }} балів
+                            </span>
+                        </td>
                         <td>{{ student.institute|default:"-" }}</td>
                         <td>
                             <span class="badge bg-dark">
@@ -118,14 +137,13 @@
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <!-- Додати штраф -->
-<a href="{% url 'penalty_create' %}" 
-   class="btn btn-outline-primary"
-   data-bs-toggle="tooltip" data-bs-title="Додати запис">
-    <i class="fas fa-plus-circle"></i>
-</a>
+                                <!-- Додати запис (штраф/списання) -->
+                                <a href="{% url 'penalty_create_for_student' student.pk %}" 
+                                   class="btn btn-outline-primary"
+                                   data-bs-toggle="tooltip" data-bs-title="Додати штраф/списання">
+                                    <i class="fas fa-plus-circle"></i>
+                                </a>
                                 <!-- Переглянути деталі -->
-
                             </div>
                         </td>
                     </tr>
@@ -136,6 +154,13 @@
                             <div class="p-3 bg-light">
                                 <h6>Деталі штрафів для {{ student.full_name }}:</h6>
                                 
+                                <div class="alert alert-info mb-3">
+                                    <strong>Загальна інформація:</strong><br>
+                                    Загальна сума штрафів: {{ student.total_penalty_points }} балів<br>
+                                    Відпрацьовано: {{ student.total_reduction_points }} балів<br>
+                                    Залишок: {{ student.remaining_points }} балів
+                                </div>
+                                
                                 {% if student.active_penalties %}
                                 <div class="mb-3">
                                     <strong>Активні штрафи:</strong>
@@ -144,10 +169,14 @@
                                         <li class="list-group-item d-flex justify-content-between align-items-center">
                                             <div>
                                                 <small>{{ penalty.penalty_date|date:"d.m.Y" }}</small> - 
-                                                {{ penalty.description }}
+                                                {{ penalty.reason|truncatechars:50 }}
+                                                {% if penalty.comment %}
+                                                <br><small class="text-muted">{{ penalty.comment|truncatechars:50 }}</small>
+                                                {% endif %}
                                             </div>
                                             <div>
                                                 <span class="badge bg-danger">{{ penalty.points }} балів</span>
+                                                <span class="badge bg-secondary ms-1">{{ penalty.get_severity_display }}</span>
                                             </div>
                                         </li>
                                         {% endfor %}
@@ -163,7 +192,10 @@
                                         <li class="list-group-item d-flex justify-content-between align-items-center">
                                             <div>
                                                 <small>{{ reduction.reduction_date|date:"d.m.Y" }}</small> - 
-                                                {{ reduction.description|default:"Без опису" }}
+                                                {{ reduction.reason|truncatechars:50 }}
+                                                {% if reduction.work_details %}
+                                                <br><small class="text-muted">{{ reduction.work_details|truncatechars:50 }}</small>
+                                                {% endif %}
                                             </div>
                                             <span class="badge bg-success">{{ reduction.points_reduced }} балів</span>
                                         </li>
