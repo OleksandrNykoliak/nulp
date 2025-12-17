@@ -1102,3 +1102,198 @@ def penalty_reduction_delete(request, pk):
 
 
 
+
+
+@login_required
+def penalty_export(request):
+    """Експорт даних про штрафи в Excel"""
+    # Використовуємо ту саму логіку фільтрації, що і в penalty_list
+    form = PenaltySearchForm(request.GET or None)
+    
+    # Отримуємо всіх студентів з активними штрафами
+    students = Student.objects.filter(
+        penalties__status='active'
+    ).distinct()
+    
+    # Анотуємо загальну суму штрафних балів для кожного студента
+    students = students.annotate(
+        total_penalty_points=Coalesce(
+            Sum('penalties__points', filter=Q(penalties__status='active')),
+            0
+        ),
+        total_reduction_points=Coalesce(
+            Sum('penalty_reductions__points_reduced'),
+            0
+        )
+    )
+    
+    # Обчислюємо залишок балів після відпрацювань
+    students = students.annotate(
+        remaining_points=F('total_penalty_points') - F('total_reduction_points')
+    )
+    
+    # Фільтрація (така ж, як у penalty_list)
+    if form.is_valid():
+        student_search = form.cleaned_data.get('student_search')
+        dormitory = form.cleaned_data.get('dormitory')
+        institute = form.cleaned_data.get('institute')
+        min_points = form.cleaned_data.get('min_points')
+        status = form.cleaned_data.get('status')
+        
+        if student_search:
+            students = students.filter(
+                Q(full_name__icontains=student_search)
+            )
+        
+        if dormitory:
+            students = students.filter(dormitory_number=dormitory)
+            
+        if institute:
+            students = students.filter(institute=institute)
+        
+        if min_points:
+            try:
+                min_points_int = int(min_points)
+                students = students.filter(total_penalty_points__gte=min_points_int)
+            except ValueError:
+                pass
+        
+        if status == 'active':
+            students = students.filter(remaining_points__gt=0)
+        elif status == 'all':
+            pass
+    
+    # Сортуємо
+    students = students.order_by('-total_penalty_points', 'full_name')
+    
+    # Створюємо нову книгу Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Штрафні бали"
+    
+    # Додаємо заголовки
+    headers = [
+        'ПІБ студента', 
+        'Гуртожиток', 
+        'Загальна сума штрафів', 
+        'Відпрацьовано', 
+        'Залишок', 
+        'ННІ',
+        'Кількість порушень',
+        'Телефон',
+        'Курс',
+        'Статус'
+    ]
+    
+    # Форматуємо заголовки
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal='center')
+    
+    # Додаємо дані
+    for row, student in enumerate(students, 2):
+        # Отримуємо кількість активних штрафів
+        active_penalties_count = student.penalties.filter(status='active').count()
+        
+        # Визначаємо статус на основі залишку балів
+        status_text = ""
+        if student.remaining_points >= 25:
+            status_text = "Критично багато штрафів"
+        elif student.remaining_points >= 15:
+            status_text = "Багато штрафів"
+        elif student.remaining_points > 0:
+            status_text = "Має штрафи"
+        else:
+            status_text = "Без штрафів"
+        
+        ws.cell(row=row, column=1, value=student.full_name)
+        ws.cell(row=row, column=2, value=student.dormitory_number or '')
+        ws.cell(row=row, column=3, value=student.total_penalty_points or 0)
+        ws.cell(row=row, column=4, value=student.total_reduction_points or 0)
+        ws.cell(row=row, column=5, value=student.remaining_points or 0)
+        ws.cell(row=row, column=6, value=student.institute or '')
+        ws.cell(row=row, column=7, value=active_penalties_count)
+        ws.cell(row=row, column=8, value=student.phone or '')
+        ws.cell(row=row, column=9, value=student.course or '')
+        ws.cell(row=row, column=10, value=status_text)
+    
+    # Додаємо другій лист з детальною інформацією про штрафи
+    ws2 = wb.create_sheet(title="Детальні штрафи")
+    
+    # Заголовки для детального листа
+    detail_headers = [
+        'ПІБ студента',
+        'Дата порушення',
+        'Причина порушення',
+        'Бали',
+        'Важкість',
+        'Коментар',
+        'Статус',
+        'Дата відпрацювання',
+        'Відпрацьовано балів',
+        'Деталі відпрацювання'
+    ]
+    
+    for col, header in enumerate(detail_headers, 1):
+        cell = ws2.cell(row=1, column=col, value=header)
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal='center')
+    
+    # Додаємо детальну інформацію про штрафи
+    detail_row = 2
+    for student in students:
+        # Отримуємо всі штрафи студента
+        penalties = Penalty.objects.filter(student=student).select_related('student')
+        
+        for penalty in penalties:
+            # Отримуємо відпрацювання для цього штрафу
+            reductions = penalty.reductions.all()
+            
+            if reductions:
+                for reduction in reductions:
+                    ws2.cell(row=detail_row, column=1, value=student.full_name)
+                    ws2.cell(row=detail_row, column=2, value=penalty.penalty_date.strftime("%d.%m.%Y") if penalty.penalty_date else '')
+                    ws2.cell(row=detail_row, column=3, value=penalty.reason or '')
+                    ws2.cell(row=detail_row, column=4, value=penalty.points or 0)
+                    ws2.cell(row=detail_row, column=5, value=penalty.get_severity_display() if penalty.severity else '')
+                    ws2.cell(row=detail_row, column=6, value=penalty.comment or '')
+                    ws2.cell(row=detail_row, column=7, value=penalty.get_status_display() if penalty.status else '')
+                    ws2.cell(row=detail_row, column=8, value=reduction.reduction_date.strftime("%d.%m.%Y") if reduction.reduction_date else '')
+                    ws2.cell(row=detail_row, column=9, value=reduction.points_reduced or 0)
+                    ws2.cell(row=detail_row, column=10, value=reduction.work_details or '')
+                    detail_row += 1
+            else:
+                # Якщо немає відпрацювань, все одно додаємо штраф
+                ws2.cell(row=detail_row, column=1, value=student.full_name)
+                ws2.cell(row=detail_row, column=2, value=penalty.penalty_date.strftime("%d.%m.%Y") if penalty.penalty_date else '')
+                ws2.cell(row=detail_row, column=3, value=penalty.reason or '')
+                ws2.cell(row=detail_row, column=4, value=penalty.points or 0)
+                ws2.cell(row=detail_row, column=5, value=penalty.get_severity_display() if penalty.severity else '')
+                ws2.cell(row=detail_row, column=6, value=penalty.comment or '')
+                ws2.cell(row=detail_row, column=7, value=penalty.get_status_display() if penalty.status else '')
+                detail_row += 1
+    
+    # Автоматичне налаштування ширини стовпців
+    for sheet in [ws, ws2]:
+        for column in sheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)
+            sheet.column_dimensions[column_letter].width = adjusted_width
+    
+    # Створюємо відповідь
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    filename = f"penalty_export_{timezone.now().strftime('%Y-%m-%d_%H-%M')}.xlsx"
+    response['Content-Disposition'] = f'attachment; filename={filename}'
+    
+    wb.save(response)
+    return response

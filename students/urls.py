@@ -32,5 +32,7 @@ urlpatterns = [
     path('penalties/<int:pk>/cancel/', views.penalty_cancel, name='penalty_cancel'),
     path('students-with-penalties/', views.students_with_penalties, name='students_with_penalties'),
     path('get-student-points/<int:student_id>/', views.get_student_points, name='get_student_points'),
+    path('penalty/export/', views.penalty_export, name='penalty_export'),
+
 
 ]

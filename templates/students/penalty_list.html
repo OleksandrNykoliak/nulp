@@ -2,10 +2,17 @@
 {% block title %}Штрафні бали{% endblock %}
 {% block content %}
 
+<!-- В розділі з кнопками -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4>Система штрафних балів</h4>
     
     <div>
+        <!-- Кнопка експорту -->
+        <a href="{% url 'penalty_export' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" 
+           class="btn btn-success me-2">
+            <i class="fas fa-file-excel"></i> Експорт Excel
+        </a>
+        
         <a href="{% url 'penalty_create' %}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Додати запис
         </a>
