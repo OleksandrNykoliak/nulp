@@ -151,13 +151,23 @@ def student_update(request, pk):
         'diffs': diffs,
     })
 
+# @login_required
+# def student_delete(request, pk):
+#     student = get_object_or_404(Student, pk=pk)
+#     messages.error(request, "❌ Видалення заборонено. Будь ласка, створіть нового користувача.")
+#     return redirect('student_list')
+
 @login_required
 def student_delete(request, pk):
     student = get_object_or_404(Student, pk=pk)
-    messages.error(request, "❌ Видалення заборонено. Будь ласка, створіть нового користувача.")
+    
+    if request.user.username != "Andriiovskyj":
+        messages.error(request, "❌ Вам заборонено видаляти користувачів")
+        return redirect('student_list')
+    
+    student.delete()
+    messages.success(request, f"✅ Студента {student.full_name} успішно видалено.")
     return redirect('student_list')
-
-
 
 
 
